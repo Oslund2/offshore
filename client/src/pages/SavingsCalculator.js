@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useApi } from '../utils/ApiContext';
 import { formatCurrency } from '../utils/format';
 import { US_RATES, OFFSHORE_COUNTRIES, calculateRoleSavings } from '../utils/offshoreRates';
@@ -9,11 +9,7 @@ export default function SavingsCalculator() {
   const [selectedCountries, setSelectedCountries] = useState(['india', 'philippines', 'poland']);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadAllRoles();
-  }, []);
-
-  const loadAllRoles = async () => {
+  const loadAllRoles = useCallback(async () => {
     try {
       const units = await api.getBusinessUnits();
       const allRoles = [];
@@ -31,7 +27,9 @@ export default function SavingsCalculator() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [api]);
+
+  useEffect(() => { loadAllRoles(); }, [loadAllRoles]);
 
   const toggleCountry = (id) => {
     setSelectedCountries(prev =>

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState } from 'react';
 import { api as supabaseApi } from './utils/api';
 import { demoApi } from './utils/demoApi';
 import { seedSupabase } from './utils/seedSupabase';
@@ -12,77 +12,54 @@ import SavingsCalculator from './pages/SavingsCalculator';
 import ManageUnits from './pages/ManageUnits';
 
 export default function App() {
+  // mode: null = not selected, 'demo' = in-memory, 'live' = supabase
+  const [mode, setMode] = useState(null);
   const [businessUnits, setBusinessUnits] = useState([]);
   const [activeView, setActiveView] = useState('dashboard');
   const [activeUnitId, setActiveUnitId] = useState(null);
   const [rollup, setRollup] = useState(null);
   const [costRiskSlider, setCostRiskSlider] = useState(50);
   const [loading, setLoading] = useState(false);
-  const [modeSelected, setModeSelected] = useState(false);
   const [seeding, setSeeding] = useState(false);
   const [error, setError] = useState(null);
-  const [isDemo, setIsDemo] = useState(false);
-  const apiRef = useRef(supabaseApi);
 
-  const loadData = useCallback(async () => {
+  // Derive API from mode — always in sync, no ref needed
+  const activeApi = mode === 'demo' ? demoApi : supabaseApi;
+  const isDemo = mode === 'demo';
+
+  const loadData = async (api) => {
     try {
       setError(null);
-      const currentApi = apiRef.current;
       const [units, rollupData] = await Promise.all([
-        currentApi.getBusinessUnits(),
-        currentApi.getRollup(),
+        api.getBusinessUnits(),
+        api.getRollup(),
       ]);
       setBusinessUnits(units);
       setRollup(rollupData);
+      return units;
     } catch (err) {
       console.error('Failed to load data:', err);
       setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const enterDemoMode = async () => {
-    apiRef.current = demoApi;
-    setIsDemo(true);
-    setModeSelected(true);
-    setLoading(true);
-    setError(null);
-    try {
-      const [units, rollupData] = await Promise.all([
-        demoApi.getBusinessUnits(),
-        demoApi.getRollup(),
-      ]);
-      setBusinessUnits(units);
-      setRollup(rollupData);
-    } catch (err) {
-      console.error('Demo load failed:', err);
+      return null;
     } finally {
       setLoading(false);
     }
   };
 
-  const enterLiveMode = async () => {
-    apiRef.current = supabaseApi;
-    setIsDemo(false);
-    setModeSelected(true);
+  const enterDemoMode = async () => {
+    setMode('demo');
     setLoading(true);
     setError(null);
-    try {
-      const [units, rollupData] = await Promise.all([
-        supabaseApi.getBusinessUnits(),
-        supabaseApi.getRollup(),
-      ]);
-      setBusinessUnits(units);
-      setRollup(rollupData);
-      if (!units || units.length === 0) {
-        setError('Connected but no data found. Seed the database first.');
-      }
-    } catch (err) {
-      console.error('Failed to connect:', err);
-      setError(err.message);
-    } finally {
-      setLoading(false);
+    await loadData(demoApi);
+  };
+
+  const enterLiveMode = async () => {
+    setMode('live');
+    setLoading(true);
+    setError(null);
+    const units = await loadData(supabaseApi);
+    if (units && units.length === 0) {
+      setError('Connected but no data found. Seed the database first.');
     }
   };
 
@@ -90,9 +67,9 @@ export default function App() {
     setSeeding(true);
     try {
       await seedSupabase();
-      apiRef.current = supabaseApi;
+      setMode('live');
       setLoading(true);
-      await loadData();
+      await loadData(supabaseApi);
     } catch (err) {
       console.error('Seed failed:', err);
       setError(`Seed failed: ${err.message}`);
@@ -106,9 +83,9 @@ export default function App() {
     setActiveUnitId(unitId);
   };
 
-  const handleDataChange = () => {
+  const handleDataChange = async () => {
     setLoading(true);
-    loadData();
+    await loadData(activeApi);
   };
 
   if (loading) {
@@ -122,7 +99,7 @@ export default function App() {
     );
   }
 
-  if (!modeSelected) {
+  if (!mode) {
     const hasSupabase = process.env.REACT_APP_SUPABASE_URL && process.env.REACT_APP_SUPABASE_KEY;
     return (
       <div className="flex items-center justify-center min-h-screen bg-gwoe-bg p-6">
@@ -256,7 +233,7 @@ CREATE POLICY "public_access" ON roles FOR ALL USING (true) WITH CHECK (true);`}
   }
 
   return (
-    <ApiProvider api={apiRef.current}>
+    <ApiProvider api={activeApi} key={mode}>
       <div className="flex h-screen bg-gwoe-bg overflow-hidden">
         <Sidebar
           businessUnits={businessUnits}
