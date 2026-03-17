@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { api } from '../utils/api';
+import { useApi } from '../utils/ApiContext';
 import { formatCurrency, getLevelColor, getRecommendationBadge } from '../utils/format';
 import RiskAssessmentModal from './RiskAssessmentModal';
 import AIInsightsBadge from './AIInsightsBadge';
 
 export default function RoleTable({ roles, departmentId, onDataChange, costRiskSlider }) {
+  const api = useApi();
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({});
   const [riskModal, setRiskModal] = useState(null);

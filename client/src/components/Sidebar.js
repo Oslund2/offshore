@@ -9,11 +9,14 @@ const BU_ICONS = {
   business: '💼',
 };
 
-export default function Sidebar({ businessUnits, activeView, activeUnitId, onNavigate }) {
+export default function Sidebar({ businessUnits, activeView, activeUnitId, onNavigate, isDemo }) {
   return (
     <aside className="w-64 bg-gwoe-card border-r border-gwoe-border flex flex-col">
       <div className="p-5 border-b border-gwoe-border">
-        <h1 className="text-lg font-semibold text-white tracking-tight">GWOE</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-lg font-semibold text-white tracking-tight">GWOE</h1>
+          {isDemo && <span className="text-xs bg-gwoe-amber/20 text-gwoe-amber border border-gwoe-amber/30 px-1.5 py-0.5 rounded">DEMO</span>}
+        </div>
         <p className="text-xs text-gwoe-muted mt-0.5">Workforce Optimization Engine</p>
       </div>
 
@@ -79,7 +82,7 @@ export default function Sidebar({ businessUnits, activeView, activeUnitId, onNav
       </nav>
 
       <div className="p-4 border-t border-gwoe-border">
-        <p className="text-xs text-gwoe-muted">v1.0 — AI-Enhanced</p>
+        <p className="text-xs text-gwoe-muted">{isDemo ? 'Demo Mode — Data resets on refresh' : 'v1.0 — AI-Enhanced'}</p>
       </div>
     </aside>
   );

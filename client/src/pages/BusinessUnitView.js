@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { api } from '../utils/api';
+import { useApi } from '../utils/ApiContext';
 import { formatCurrency } from '../utils/format';
 import RoleTable from '../components/RoleTable';
 
 export default function BusinessUnitView({ unitId, costRiskSlider, onDataChange }) {
+  const api = useApi();
   const [unit, setUnit] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -17,7 +18,7 @@ export default function BusinessUnitView({ unitId, costRiskSlider, onDataChange 
     } finally {
       setLoading(false);
     }
-  }, [unitId]);
+  }, [unitId, api]);
 
   useEffect(() => { loadUnit(); }, [loadUnit]);
 

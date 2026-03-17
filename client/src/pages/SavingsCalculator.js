@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { api } from '../utils/api';
+import { useApi } from '../utils/ApiContext';
 import { formatCurrency } from '../utils/format';
 import { US_RATES, OFFSHORE_COUNTRIES, calculateRoleSavings } from '../utils/offshoreRates';
 
 export default function SavingsCalculator() {
+  const api = useApi();
   const [roles, setRoles] = useState([]);
   const [selectedCountries, setSelectedCountries] = useState(['india', 'philippines', 'poland']);
   const [loading, setLoading] = useState(true);

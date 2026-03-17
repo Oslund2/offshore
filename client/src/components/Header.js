@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function Header({ activeView, activeUnitId, businessUnits, costRiskSlider, onSliderChange }) {
+export default function Header({ activeView, activeUnitId, businessUnits, costRiskSlider, onSliderChange, isDemo }) {
   const activeUnit = businessUnits.find(u => u.id === activeUnitId);
 
   const getTitle = () => {
@@ -39,8 +39,8 @@ export default function Header({ activeView, activeUnitId, businessUnits, costRi
         <div className="h-8 w-px bg-gwoe-border"></div>
 
         <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-gwoe-green animate-pulse"></div>
-          <span className="text-xs text-gwoe-muted">AI Engine Active</span>
+          <div className={`w-2 h-2 rounded-full ${isDemo ? 'bg-gwoe-amber' : 'bg-gwoe-green'} animate-pulse`}></div>
+          <span className="text-xs text-gwoe-muted">{isDemo ? 'Demo Mode' : 'AI Engine Active'}</span>
         </div>
       </div>
     </header>

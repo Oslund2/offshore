@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { api } from '../utils/api';
+import { useApi } from '../utils/ApiContext';
 import { formatCurrency } from '../utils/format';
 
 export default function ExecutiveSummary({ rollup }) {
+  const api = useApi();
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(false);
 
