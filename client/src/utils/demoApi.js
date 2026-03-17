@@ -61,6 +61,50 @@ export const demoApi = {
     return { ...bu, departments };
   },
 
+  async createBusinessUnit(data) {
+    const bu = { id: data.id || data.name.toLowerCase().replace(/\s+/g, '-'), name: data.name, description: data.description || '' };
+    db.businessUnits.push(bu);
+    return bu;
+  },
+
+  async updateBusinessUnit(id, data) {
+    const idx = db.businessUnits.findIndex(b => b.id === id);
+    if (idx === -1) throw new Error('Business unit not found');
+    db.businessUnits[idx] = { ...db.businessUnits[idx], ...data };
+    return db.businessUnits[idx];
+  },
+
+  async deleteBusinessUnit(id) {
+    const idx = db.businessUnits.findIndex(b => b.id === id);
+    if (idx === -1) throw new Error('Business unit not found');
+    const deptIds = db.departments.filter(d => d.business_unit_id === id).map(d => d.id);
+    db.roles = db.roles.filter(r => !deptIds.includes(r.department_id));
+    db.departments = db.departments.filter(d => d.business_unit_id !== id);
+    db.businessUnits.splice(idx, 1);
+    return { success: true };
+  },
+
+  async createDepartment(data) {
+    const dept = { id: nextDeptId++, business_unit_id: data.business_unit_id, name: data.name };
+    db.departments.push(dept);
+    return dept;
+  },
+
+  async updateDepartment(id, data) {
+    const idx = db.departments.findIndex(d => d.id === id);
+    if (idx === -1) throw new Error('Department not found');
+    db.departments[idx] = { ...db.departments[idx], ...data };
+    return db.departments[idx];
+  },
+
+  async deleteDepartment(id) {
+    const idx = db.departments.findIndex(d => d.id === id);
+    if (idx === -1) throw new Error('Department not found');
+    db.roles = db.roles.filter(r => r.department_id !== id);
+    db.departments.splice(idx, 1);
+    return { success: true };
+  },
+
   async createRole(data) {
     const role = { id: nextRoleId++, ...data };
     db.roles.push(role);

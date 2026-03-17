@@ -9,6 +9,7 @@ import BusinessUnitView from './pages/BusinessUnitView';
 import DashboardView from './pages/DashboardView';
 import ExecutiveSummary from './pages/ExecutiveSummary';
 import SavingsCalculator from './pages/SavingsCalculator';
+import ManageUnits from './pages/ManageUnits';
 
 export default function App() {
   const [businessUnits, setBusinessUnits] = useState([]);
@@ -238,7 +239,7 @@ CREATE POLICY "public_access" ON roles FOR ALL USING (true) WITH CHECK (true);`}
           />
           <main className="flex-1 overflow-y-auto p-6">
             {activeView === 'dashboard' && (
-              <DashboardView rollup={rollup} onNavigate={handleNavigate} />
+              <DashboardView rollup={rollup} onNavigate={handleNavigate} costRiskSlider={costRiskSlider} />
             )}
             {activeView === 'unit' && activeUnitId && (
               <BusinessUnitView
@@ -249,6 +250,9 @@ CREATE POLICY "public_access" ON roles FOR ALL USING (true) WITH CHECK (true);`}
             )}
             {activeView === 'executive' && (
               <ExecutiveSummary rollup={rollup} />
+            )}
+            {activeView === 'manage' && (
+              <ManageUnits onDataChange={handleDataChange} />
             )}
             {activeView === 'calculator' && (
               <SavingsCalculator />

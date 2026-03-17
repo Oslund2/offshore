@@ -30,6 +30,70 @@ export const api = {
     return { ...unit, departments };
   },
 
+  // Business Unit CRUD
+  async createBusinessUnit(data) {
+    const { data: bu, error } = await supabase
+      .from('business_units')
+      .insert({ id: data.id || data.name.toLowerCase().replace(/\s+/g, '-'), name: data.name, description: data.description || '' })
+      .select()
+      .single();
+    if (error) throw new Error(error.message);
+    return bu;
+  },
+
+  async updateBusinessUnit(id, data) {
+    const { data: bu, error } = await supabase
+      .from('business_units')
+      .update(data)
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) throw new Error(error.message);
+    return bu;
+  },
+
+  async deleteBusinessUnit(id) {
+    // Delete roles in departments first, then departments, then BU
+    const { data: depts } = await supabase.from('departments').select('id').eq('business_unit_id', id);
+    if (depts && depts.length > 0) {
+      const deptIds = depts.map(d => d.id);
+      await supabase.from('roles').delete().in('department_id', deptIds);
+      await supabase.from('departments').delete().eq('business_unit_id', id);
+    }
+    const { error } = await supabase.from('business_units').delete().eq('id', id);
+    if (error) throw new Error(error.message);
+    return { success: true };
+  },
+
+  // Department CRUD
+  async createDepartment(data) {
+    const { data: dept, error } = await supabase
+      .from('departments')
+      .insert({ business_unit_id: data.business_unit_id, name: data.name })
+      .select()
+      .single();
+    if (error) throw new Error(error.message);
+    return dept;
+  },
+
+  async updateDepartment(id, data) {
+    const { data: dept, error } = await supabase
+      .from('departments')
+      .update(data)
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) throw new Error(error.message);
+    return dept;
+  },
+
+  async deleteDepartment(id) {
+    await supabase.from('roles').delete().eq('department_id', id);
+    const { error } = await supabase.from('departments').delete().eq('id', id);
+    if (error) throw new Error(error.message);
+    return { success: true };
+  },
+
   // Roles CRUD
   async createRole(data) {
     const { data: role, error } = await supabase

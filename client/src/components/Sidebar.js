@@ -33,8 +33,19 @@ export default function Sidebar({ businessUnits, activeView, activeUnitId, onNav
           Global Dashboard
         </button>
 
-        <div className="pt-3 pb-1 px-3">
+        <div className="pt-3 pb-1 px-3 flex items-center justify-between">
           <p className="text-xs font-medium text-gwoe-muted uppercase tracking-wider">Business Units</p>
+          <button
+            onClick={() => onNavigate('manage')}
+            className={`text-xs px-1.5 py-0.5 rounded transition-colors ${
+              activeView === 'manage'
+                ? 'bg-gwoe-accent/20 text-gwoe-accent'
+                : 'text-gwoe-muted hover:text-gwoe-accent hover:bg-gwoe-accent/10'
+            }`}
+            title="Manage Business Units"
+          >
+            Manage
+          </button>
         </div>
 
         {businessUnits.map((unit) => (

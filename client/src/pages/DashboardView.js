@@ -1,31 +1,111 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useApi } from '../utils/ApiContext';
 import { formatCurrency } from '../utils/format';
+import { getSliderAdjustedRecommendation } from '../utils/sliderLogic';
 
-export default function DashboardView({ rollup, onNavigate }) {
-  if (!rollup) return <p className="text-gwoe-muted">Loading dashboard...</p>;
+export default function DashboardView({ rollup, onNavigate, costRiskSlider }) {
+  const api = useApi();
+  const [allRoles, setAllRoles] = useState([]);
 
-  const { overall, byUnit, byLevel } = rollup;
-  const savingsEstimate = Math.round(overall.offshore_spend * 0.55);
-  const offshorePercent = Math.round((overall.offshore_fte / overall.total_fte) * 100);
-  const qualityScore = Math.round(100 - (overall.retain_fte / overall.total_fte) * 40 - (overall.partial_fte / overall.total_fte) * 20);
+  useEffect(() => {
+    async function loadRoles() {
+      try {
+        const units = await api.getBusinessUnits();
+        const roles = [];
+        for (const unit of units) {
+          const full = await api.getBusinessUnit(unit.id);
+          for (const dept of full.departments) {
+            for (const role of dept.roles) {
+              roles.push({ ...role, unitId: unit.id, unitName: unit.name, deptName: dept.name });
+            }
+          }
+        }
+        setAllRoles(roles);
+      } catch (e) {
+        console.error('Failed to load roles for dashboard:', e);
+      }
+    }
+    loadRoles();
+  }, [api]);
+
+  if (!rollup && allRoles.length === 0) return <p className="text-gwoe-muted">Loading dashboard...</p>;
+
+  // Recompute everything with slider adjustments
+  const adjustedRoles = allRoles.map(r => ({
+    ...r,
+    adjustedRec: getSliderAdjustedRecommendation(r.recommendation, r.level, r.qualitative_why, costRiskSlider),
+  }));
+
+  const totalFTE = adjustedRoles.reduce((s, r) => s + r.current_fte, 0);
+  const totalSpend = adjustedRoles.reduce((s, r) => s + r.estimated_spend, 0);
+  const totalRoles = adjustedRoles.length;
+
+  const offshoreFTE = adjustedRoles.filter(r => r.adjustedRec === 'Y').reduce((s, r) => s + r.current_fte, 0);
+  const offshoreSpend = adjustedRoles.filter(r => r.adjustedRec === 'Y').reduce((s, r) => s + r.estimated_spend, 0);
+  const partialFTE = adjustedRoles.filter(r => r.adjustedRec === 'P').reduce((s, r) => s + r.current_fte, 0);
+  const retainFTE = adjustedRoles.filter(r => r.adjustedRec === 'N').reduce((s, r) => s + r.current_fte, 0);
+
+  const savingsEstimate = Math.round(offshoreSpend * 0.55);
+  const offshorePercent = totalFTE > 0 ? Math.round((offshoreFTE / totalFTE) * 100) : 0;
+  const partialPercent = totalFTE > 0 ? Math.round((partialFTE / totalFTE) * 100) : 0;
+  const retainPercent = totalFTE > 0 ? Math.round((retainFTE / totalFTE) * 100) : 0;
+  const qualityScore = totalFTE > 0 ? Math.round(100 - (retainFTE / totalFTE) * 40 - (partialFTE / totalFTE) * 20) : 0;
+
+  // Group by unit
+  const unitMap = {};
+  for (const r of adjustedRoles) {
+    if (!unitMap[r.unitId]) unitMap[r.unitId] = { id: r.unitId, name: r.unitName, total_roles: 0, total_fte: 0, total_spend: 0, offshore_fte: 0, offshore_spend: 0 };
+    unitMap[r.unitId].total_roles++;
+    unitMap[r.unitId].total_fte += r.current_fte;
+    unitMap[r.unitId].total_spend += r.estimated_spend;
+    if (r.adjustedRec === 'Y') { unitMap[r.unitId].offshore_fte += r.current_fte; unitMap[r.unitId].offshore_spend += r.estimated_spend; }
+  }
+  const byUnit = Object.values(unitMap).sort((a, b) => a.name.localeCompare(b.name));
+
+  // Group by level
+  const levelMap = {};
+  for (const r of adjustedRoles) {
+    if (!levelMap[r.level]) levelMap[r.level] = { level: r.level, total_fte: 0, offshore_count: 0, retain_count: 0 };
+    levelMap[r.level].total_fte += r.current_fte;
+    if (r.adjustedRec === 'Y') levelMap[r.level].offshore_count++;
+    if (r.adjustedRec === 'N') levelMap[r.level].retain_count++;
+  }
+  const byLevel = Object.values(levelMap).sort((a, b) => a.level.localeCompare(b.level));
+
+  const sliderIsNeutral = costRiskSlider >= 40 && costRiskSlider <= 60;
 
   return (
     <div className="space-y-6">
+      {/* Slider impact banner */}
+      {!sliderIsNeutral && (
+        <div className={`rounded-md px-4 py-2.5 text-xs flex items-center gap-2 ${
+          costRiskSlider > 60
+            ? 'bg-gwoe-amber/10 border border-gwoe-amber/30 text-gwoe-amber'
+            : 'bg-gwoe-green/10 border border-gwoe-green/30 text-gwoe-green'
+        }`}>
+          <span>{costRiskSlider > 60 ? '⚡' : '🛡'}</span>
+          <span>
+            <strong>Slider Active ({costRiskSlider > 60 ? 'Max Savings' : 'Max Quality'} — {costRiskSlider}%):</strong>{' '}
+            All numbers below reflect AI-adjusted recommendations. Move slider to center (50%) for baseline.
+          </span>
+        </div>
+      )}
+
       {/* Top KPIs */}
       <div className="grid grid-cols-4 gap-4">
         <div className="card p-5">
           <p className="text-xs text-gwoe-muted uppercase tracking-wider">Total Workforce</p>
-          <p className="text-3xl font-bold text-white mt-2">{overall.total_fte}</p>
+          <p className="text-3xl font-bold text-white mt-2">{totalFTE}</p>
           <p className="text-xs text-gwoe-muted mt-1">FTE across {byUnit.length} units</p>
         </div>
         <div className="card p-5">
           <p className="text-xs text-gwoe-muted uppercase tracking-wider">Annual Spend</p>
-          <p className="text-3xl font-bold text-white mt-2">{formatCurrency(overall.total_spend)}</p>
-          <p className="text-xs text-gwoe-muted mt-1">{overall.total_roles} evaluated roles</p>
+          <p className="text-3xl font-bold text-white mt-2">{formatCurrency(totalSpend)}</p>
+          <p className="text-xs text-gwoe-muted mt-1">{totalRoles} evaluated roles</p>
         </div>
         <div className="card p-5 glow-border">
           <p className="text-xs text-gwoe-green uppercase tracking-wider">Potential FTE Savings</p>
-          <p className="text-3xl font-bold text-gwoe-green mt-2">{overall.offshore_fte}</p>
+          <p className="text-3xl font-bold text-gwoe-green mt-2">{offshoreFTE}</p>
           <p className="text-xs text-gwoe-muted mt-1">{offshorePercent}% of workforce</p>
         </div>
         <div className="card p-5 glow-border">
@@ -56,6 +136,7 @@ export default function DashboardView({ rollup, onNavigate }) {
                   stroke="currentColor"
                   strokeWidth="2.5"
                   strokeDasharray={`${qualityScore}, 100`}
+                  style={{ transition: 'stroke-dasharray 0.3s ease' }}
                 />
               </svg>
               <span className="absolute inset-0 flex items-center justify-center text-lg font-bold text-white">
@@ -78,29 +159,29 @@ export default function DashboardView({ rollup, onNavigate }) {
           <div className="space-y-3">
             <div>
               <div className="flex justify-between text-xs mb-1">
-                <span className="text-gwoe-green">Offshore ({overall.offshore_fte} FTE)</span>
+                <span className="text-gwoe-green">Offshore ({offshoreFTE} FTE)</span>
                 <span className="text-gwoe-muted">{offshorePercent}%</span>
               </div>
               <div className="h-2 bg-gwoe-bg rounded-full overflow-hidden">
-                <div className="h-full bg-gwoe-green rounded-full" style={{ width: `${offshorePercent}%` }}></div>
+                <div className="h-full bg-gwoe-green rounded-full transition-all duration-300" style={{ width: `${offshorePercent}%` }}></div>
               </div>
             </div>
             <div>
               <div className="flex justify-between text-xs mb-1">
-                <span className="text-gwoe-amber">Partial ({overall.partial_fte} FTE)</span>
-                <span className="text-gwoe-muted">{Math.round((overall.partial_fte / overall.total_fte) * 100)}%</span>
+                <span className="text-gwoe-amber">Partial ({partialFTE} FTE)</span>
+                <span className="text-gwoe-muted">{partialPercent}%</span>
               </div>
               <div className="h-2 bg-gwoe-bg rounded-full overflow-hidden">
-                <div className="h-full bg-gwoe-amber rounded-full" style={{ width: `${(overall.partial_fte / overall.total_fte) * 100}%` }}></div>
+                <div className="h-full bg-gwoe-amber rounded-full transition-all duration-300" style={{ width: `${partialPercent}%` }}></div>
               </div>
             </div>
             <div>
               <div className="flex justify-between text-xs mb-1">
-                <span className="text-gwoe-red">Retain ({overall.retain_fte} FTE)</span>
-                <span className="text-gwoe-muted">{Math.round((overall.retain_fte / overall.total_fte) * 100)}%</span>
+                <span className="text-gwoe-red">Retain ({retainFTE} FTE)</span>
+                <span className="text-gwoe-muted">{retainPercent}%</span>
               </div>
               <div className="h-2 bg-gwoe-bg rounded-full overflow-hidden">
-                <div className="h-full bg-gwoe-red rounded-full" style={{ width: `${(overall.retain_fte / overall.total_fte) * 100}%` }}></div>
+                <div className="h-full bg-gwoe-red rounded-full transition-all duration-300" style={{ width: `${retainPercent}%` }}></div>
               </div>
             </div>
           </div>
@@ -164,11 +245,11 @@ export default function DashboardView({ rollup, onNavigate }) {
             <tfoot>
               <tr className="border-t-2 border-gwoe-accent/30 font-semibold">
                 <td className="py-3 px-3 text-white">TOTAL</td>
-                <td className="py-3 px-3 text-right font-mono text-white">{overall.total_roles}</td>
-                <td className="py-3 px-3 text-right font-mono text-white">{overall.total_fte}</td>
-                <td className="py-3 px-3 text-right font-mono text-white">{formatCurrency(overall.total_spend)}</td>
-                <td className="py-3 px-3 text-right font-mono text-gwoe-green">{overall.offshore_fte}</td>
-                <td className="py-3 px-3 text-right font-mono text-gwoe-green">{formatCurrency(overall.offshore_spend)}</td>
+                <td className="py-3 px-3 text-right font-mono text-white">{totalRoles}</td>
+                <td className="py-3 px-3 text-right font-mono text-white">{totalFTE}</td>
+                <td className="py-3 px-3 text-right font-mono text-white">{formatCurrency(totalSpend)}</td>
+                <td className="py-3 px-3 text-right font-mono text-gwoe-green">{offshoreFTE}</td>
+                <td className="py-3 px-3 text-right font-mono text-gwoe-green">{formatCurrency(offshoreSpend)}</td>
                 <td className="py-3 px-3 text-right font-mono text-gwoe-green">{formatCurrency(savingsEstimate)}</td>
                 <td></td>
               </tr>
