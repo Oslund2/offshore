@@ -19,11 +19,11 @@ export default function App() {
   const [activeUnitId, setActiveUnitId] = useState(null);
   const [rollup, setRollup] = useState(null);
   const [costRiskSlider, setCostRiskSlider] = useState(50);
-  const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(false);
   const [seeding, setSeeding] = useState(false);
   const [error, setError] = useState(null);
 
-  // Derive API from mode — always in sync, no ref needed
+  // Derive API from mode — deterministic, no ref/effect needed
   const activeApi = mode === 'demo' ? demoApi : supabaseApi;
   const isDemo = mode === 'demo';
 
@@ -41,26 +41,26 @@ export default function App() {
       console.error('Failed to load data:', err);
       setError(err.message);
       return null;
-    } finally {
-      setLoading(false);
     }
   };
 
   const enterDemoMode = async () => {
     setMode('demo');
-    setLoading(true);
+    setInitialLoading(true);
     setError(null);
     await loadData(demoApi);
+    setInitialLoading(false);
   };
 
   const enterLiveMode = async () => {
     setMode('live');
-    setLoading(true);
+    setInitialLoading(true);
     setError(null);
     const units = await loadData(supabaseApi);
     if (units && units.length === 0) {
       setError('Connected but no data found. Seed the database first.');
     }
+    setInitialLoading(false);
   };
 
   const handleSeed = async () => {
@@ -68,8 +68,9 @@ export default function App() {
     try {
       await seedSupabase();
       setMode('live');
-      setLoading(true);
+      setInitialLoading(true);
       await loadData(supabaseApi);
+      setInitialLoading(false);
     } catch (err) {
       console.error('Seed failed:', err);
       setError(`Seed failed: ${err.message}`);
@@ -83,12 +84,13 @@ export default function App() {
     setActiveUnitId(unitId);
   };
 
+  // Background refresh — does NOT unmount children
   const handleDataChange = async () => {
-    setLoading(true);
     await loadData(activeApi);
   };
 
-  if (loading) {
+  // Initial loading spinner — only before first data load
+  if (initialLoading) {
     return (
       <div className="flex items-center justify-center h-screen bg-gwoe-bg">
         <div className="text-center">
@@ -99,6 +101,7 @@ export default function App() {
     );
   }
 
+  // Mode selection screen
   if (!mode) {
     const hasSupabase = process.env.REACT_APP_SUPABASE_URL && process.env.REACT_APP_SUPABASE_KEY;
     return (
@@ -232,8 +235,9 @@ CREATE POLICY "public_access" ON roles FOR ALL USING (true) WITH CHECK (true);`}
     );
   }
 
+  // Main app — ApiProvider NEVER unmounts once mode is set
   return (
-    <ApiProvider api={activeApi} key={mode}>
+    <ApiProvider api={activeApi}>
       <div className="flex h-screen bg-gwoe-bg overflow-hidden">
         <Sidebar
           businessUnits={businessUnits}
