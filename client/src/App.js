@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { api as supabaseApi } from './utils/api';
 import { demoApi } from './utils/demoApi';
 import { seedSupabase } from './utils/seedSupabase';
@@ -22,12 +22,12 @@ export default function App() {
   const [seeding, setSeeding] = useState(false);
   const [error, setError] = useState(null);
   const [isDemo, setIsDemo] = useState(false);
-  const [api, setApi] = useState(supabaseApi);
+  const apiRef = useRef(supabaseApi);
 
-  const loadData = useCallback(async (activeApi) => {
-    const currentApi = activeApi || api;
+  const loadData = useCallback(async () => {
     try {
       setError(null);
+      const currentApi = apiRef.current;
       const [units, rollupData] = await Promise.all([
         currentApi.getBusinessUnits(),
         currentApi.getRollup(),
@@ -40,33 +40,31 @@ export default function App() {
     } finally {
       setLoading(false);
     }
-  }, [api]);
+  }, []);
 
   const enterDemoMode = async () => {
+    apiRef.current = demoApi;
     setIsDemo(true);
-    setApi(demoApi);
     setModeSelected(true);
     setLoading(true);
     setError(null);
-    setTimeout(async () => {
-      try {
-        const [units, rollupData] = await Promise.all([
-          demoApi.getBusinessUnits(),
-          demoApi.getRollup(),
-        ]);
-        setBusinessUnits(units);
-        setRollup(rollupData);
-      } catch (err) {
-        console.error('Demo load failed:', err);
-      } finally {
-        setLoading(false);
-      }
-    }, 100);
+    try {
+      const [units, rollupData] = await Promise.all([
+        demoApi.getBusinessUnits(),
+        demoApi.getRollup(),
+      ]);
+      setBusinessUnits(units);
+      setRollup(rollupData);
+    } catch (err) {
+      console.error('Demo load failed:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const enterLiveMode = async () => {
+    apiRef.current = supabaseApi;
     setIsDemo(false);
-    setApi(supabaseApi);
     setModeSelected(true);
     setLoading(true);
     setError(null);
@@ -92,7 +90,9 @@ export default function App() {
     setSeeding(true);
     try {
       await seedSupabase();
-      await loadData(supabaseApi);
+      apiRef.current = supabaseApi;
+      setLoading(true);
+      await loadData();
     } catch (err) {
       console.error('Seed failed:', err);
       setError(`Seed failed: ${err.message}`);
@@ -107,6 +107,7 @@ export default function App() {
   };
 
   const handleDataChange = () => {
+    setLoading(true);
     loadData();
   };
 
@@ -255,7 +256,7 @@ CREATE POLICY "public_access" ON roles FOR ALL USING (true) WITH CHECK (true);`}
   }
 
   return (
-    <ApiProvider api={api}>
+    <ApiProvider api={apiRef.current}>
       <div className="flex h-screen bg-gwoe-bg overflow-hidden">
         <Sidebar
           businessUnits={businessUnits}
