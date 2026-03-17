@@ -6,6 +6,7 @@ import Header from './components/Header';
 import BusinessUnitView from './pages/BusinessUnitView';
 import DashboardView from './pages/DashboardView';
 import ExecutiveSummary from './pages/ExecutiveSummary';
+import SavingsCalculator from './pages/SavingsCalculator';
 
 export default function App() {
   const [businessUnits, setBusinessUnits] = useState([]);
@@ -114,6 +115,9 @@ export default function App() {
           )}
           {activeView === 'executive' && (
             <ExecutiveSummary rollup={rollup} />
+          )}
+          {activeView === 'calculator' && (
+            <SavingsCalculator />
           )}
         </main>
       </div>

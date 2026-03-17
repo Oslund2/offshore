@@ -54,6 +54,18 @@ export default function Sidebar({ businessUnits, activeView, activeUnitId, onNav
         </div>
 
         <button
+          onClick={() => onNavigate('calculator')}
+          className={`w-full text-left px-3 py-2.5 rounded-md text-sm transition-colors flex items-center gap-2.5 ${
+            activeView === 'calculator'
+              ? 'bg-gwoe-accent/10 text-gwoe-accent-glow border border-gwoe-accent/20'
+              : 'text-gwoe-muted hover:text-gwoe-text hover:bg-gwoe-bg'
+          }`}
+        >
+          <span className="text-base">💰</span>
+          Savings Calculator
+        </button>
+
+        <button
           onClick={() => onNavigate('executive')}
           className={`w-full text-left px-3 py-2.5 rounded-md text-sm transition-colors flex items-center gap-2.5 ${
             activeView === 'executive'

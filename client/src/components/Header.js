@@ -5,6 +5,7 @@ export default function Header({ activeView, activeUnitId, businessUnits, costRi
 
   const getTitle = () => {
     if (activeView === 'dashboard') return 'Global Dashboard';
+    if (activeView === 'calculator') return 'Savings Calculator — US vs. Offshore Rates';
     if (activeView === 'executive') return 'Executive Summary — C-Suite Report';
     if (activeUnit) return `${activeUnit.name} — ${activeUnit.description}`;
     return 'GWOE';
