@@ -1,34 +1,142 @@
-const API_BASE = process.env.REACT_APP_API_URL || '/api';
-
-async function fetchJSON(url, options = {}) {
-  const res = await fetch(`${API_BASE}${url}`, {
-    headers: { 'Content-Type': 'application/json', ...options.headers },
-    ...options,
-  });
-  if (!res.ok) {
-    const error = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error(error.error || 'API request failed');
-  }
-  return res.json();
-}
+import { supabase } from './supabaseClient';
+import { generateRationale, generateRiskAssessment, analyzeInsights, generateExecutiveSummary } from './aiEngine';
 
 export const api = {
   // Business Units
-  getBusinessUnits: () => fetchJSON('/business-units'),
-  getBusinessUnit: (id) => fetchJSON(`/business-units/${id}`),
+  async getBusinessUnits() {
+    const { data, error } = await supabase
+      .from('business_units')
+      .select('*, departments(id, name)')
+      .order('name');
+    if (error) throw new Error(error.message);
+    return data;
+  },
 
-  // Roles
-  createRole: (data) => fetchJSON('/roles', { method: 'POST', body: JSON.stringify(data) }),
-  updateRole: (id, data) => fetchJSON(`/roles/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-  deleteRole: (id) => fetchJSON(`/roles/${id}`, { method: 'DELETE' }),
+  async getBusinessUnit(id) {
+    const { data: unit, error: unitErr } = await supabase
+      .from('business_units')
+      .select('*')
+      .eq('id', id)
+      .single();
+    if (unitErr) throw new Error(unitErr.message);
+
+    const { data: departments, error: deptErr } = await supabase
+      .from('departments')
+      .select('*, roles(*)')
+      .eq('business_unit_id', id)
+      .order('name');
+    if (deptErr) throw new Error(deptErr.message);
+
+    return { ...unit, departments };
+  },
+
+  // Roles CRUD
+  async createRole(data) {
+    const { data: role, error } = await supabase
+      .from('roles')
+      .insert(data)
+      .select()
+      .single();
+    if (error) throw new Error(error.message);
+    return role;
+  },
+
+  async updateRole(id, data) {
+    const { data: role, error } = await supabase
+      .from('roles')
+      .update(data)
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) throw new Error(error.message);
+    return role;
+  },
+
+  async deleteRole(id) {
+    const { error } = await supabase
+      .from('roles')
+      .delete()
+      .eq('id', id);
+    if (error) throw new Error(error.message);
+    return { success: true };
+  },
 
   // Dashboard
-  getRollup: () => fetchJSON('/dashboard/rollup'),
-  getUnitRollup: (unitId) => fetchJSON(`/dashboard/rollup/${unitId}`),
+  async getRollup() {
+    const { data: allRoles, error } = await supabase
+      .from('roles')
+      .select('*, departments!inner(name, business_unit_id, business_units!inner(id, name))');
+    if (error) throw new Error(error.message);
 
-  // AI
-  getAutoRationale: (data) => fetchJSON('/ai/rationale', { method: 'POST', body: JSON.stringify(data) }),
-  getRiskAssessment: (data) => fetchJSON('/ai/risk-assessment', { method: 'POST', body: JSON.stringify(data) }),
-  getAIInsights: (data) => fetchJSON('/ai/insights', { method: 'POST', body: JSON.stringify(data) }),
-  getExecutiveSummary: () => fetchJSON('/ai/executive-summary', { method: 'POST', body: '{}' }),
+    const overall = {
+      total_roles: allRoles.length,
+      total_fte: allRoles.reduce((s, r) => s + r.current_fte, 0),
+      total_spend: allRoles.reduce((s, r) => s + r.estimated_spend, 0),
+      offshore_fte: allRoles.filter(r => r.recommendation === 'Y').reduce((s, r) => s + r.current_fte, 0),
+      offshore_spend: allRoles.filter(r => r.recommendation === 'Y').reduce((s, r) => s + r.estimated_spend, 0),
+      partial_fte: allRoles.filter(r => r.recommendation === 'P').reduce((s, r) => s + r.current_fte, 0),
+      partial_spend: allRoles.filter(r => r.recommendation === 'P').reduce((s, r) => s + r.estimated_spend, 0),
+      retain_fte: allRoles.filter(r => r.recommendation === 'N').reduce((s, r) => s + r.current_fte, 0),
+      retain_spend: allRoles.filter(r => r.recommendation === 'N').reduce((s, r) => s + r.estimated_spend, 0),
+    };
+
+    // Group by unit
+    const unitMap = {};
+    for (const r of allRoles) {
+      const uid = r.departments.business_units.id;
+      const uname = r.departments.business_units.name;
+      if (!unitMap[uid]) unitMap[uid] = { id: uid, name: uname, total_roles: 0, total_fte: 0, total_spend: 0, offshore_fte: 0, offshore_spend: 0, retain_fte: 0 };
+      unitMap[uid].total_roles++;
+      unitMap[uid].total_fte += r.current_fte;
+      unitMap[uid].total_spend += r.estimated_spend;
+      if (r.recommendation === 'Y') { unitMap[uid].offshore_fte += r.current_fte; unitMap[uid].offshore_spend += r.estimated_spend; }
+      if (r.recommendation === 'N') { unitMap[uid].retain_fte += r.current_fte; }
+    }
+    const byUnit = Object.values(unitMap).sort((a, b) => a.name.localeCompare(b.name));
+
+    // Group by level
+    const levelMap = {};
+    for (const r of allRoles) {
+      if (!levelMap[r.level]) levelMap[r.level] = { level: r.level, count: 0, total_fte: 0, offshore_count: 0, retain_count: 0 };
+      levelMap[r.level].count++;
+      levelMap[r.level].total_fte += r.current_fte;
+      if (r.recommendation === 'Y') levelMap[r.level].offshore_count++;
+      if (r.recommendation === 'N') levelMap[r.level].retain_count++;
+    }
+    const byLevel = Object.values(levelMap).sort((a, b) => a.level.localeCompare(b.level));
+
+    return { overall, byUnit, byLevel };
+  },
+
+  // AI — all client-side now
+  getAutoRationale(data) {
+    return Promise.resolve(generateRationale(data));
+  },
+
+  getRiskAssessment(data) {
+    return Promise.resolve(generateRiskAssessment(data));
+  },
+
+  getAIInsights(data) {
+    return Promise.resolve(analyzeInsights(data));
+  },
+
+  async getExecutiveSummary() {
+    const { data: allRoles, error } = await supabase
+      .from('roles')
+      .select('*, departments!inner(name, business_unit_id, business_units!inner(id, name))');
+    if (error) throw new Error(error.message);
+
+    // Group roles by unit for the summary generator
+    const unitMap = {};
+    for (const r of allRoles) {
+      const uid = r.departments.business_units.id;
+      const uname = r.departments.business_units.name;
+      if (!unitMap[uid]) unitMap[uid] = { name: uname, roles: [] };
+      unitMap[uid].roles.push(r);
+    }
+    const byUnit = Object.values(unitMap);
+
+    return generateExecutiveSummary(allRoles, byUnit);
+  },
 };

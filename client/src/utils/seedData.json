@@ -1,0 +1,479 @@
+{
+  "businessUnits": [
+    {
+      "id": "cyber",
+      "name": "Cyber",
+      "description": "Cybersecurity Operations",
+      "departments": [
+        {
+          "name": "IAM",
+          "roles": [
+            {
+              "roleName": "IAM Analyst",
+              "level": "L1",
+              "candidateForOffshore": "Y",
+              "recommendation": "Y",
+              "qualitativeWhy": "High-volume ticket work — password resets, access provisioning. Easily standardized with runbooks.",
+              "currentFTE": 8,
+              "estimatedSpend": 480000
+            },
+            {
+              "roleName": "IAM Engineer",
+              "level": "L2",
+              "candidateForOffshore": "Y",
+              "recommendation": "Y",
+              "qualitativeWhy": "Role-based access control maintenance and periodic access reviews. Process-driven with clear SLAs.",
+              "currentFTE": 5,
+              "estimatedSpend": 450000
+            },
+            {
+              "roleName": "IAM Architect",
+              "level": "L3",
+              "candidateForOffshore": "N",
+              "recommendation": "N",
+              "qualitativeWhy": "Requires deep institutional knowledge of internal systems, regulatory landscape, and strategic roadmap. Better kept as internal FTE for project design.",
+              "currentFTE": 2,
+              "estimatedSpend": 320000
+            }
+          ]
+        },
+        {
+          "name": "GRC",
+          "roles": [
+            {
+              "roleName": "Vulnerability Management Analyst",
+              "level": "L1",
+              "candidateForOffshore": "Y",
+              "recommendation": "Y",
+              "qualitativeWhy": "Scan execution, ticket triage, and patch tracking. High-volume, repetitive workflow.",
+              "currentFTE": 6,
+              "estimatedSpend": 360000
+            },
+            {
+              "roleName": "Phishing Awareness Coordinator",
+              "level": "L2",
+              "candidateForOffshore": "Y",
+              "recommendation": "P",
+              "qualitativeWhy": "Campaign management and reporting can be offshored, but content creation may require cultural awareness for effective social engineering simulations.",
+              "currentFTE": 3,
+              "estimatedSpend": 225000
+            },
+            {
+              "roleName": "GRC Program Manager",
+              "level": "L3",
+              "candidateForOffshore": "N",
+              "recommendation": "N",
+              "qualitativeWhy": "Strategic compliance and regulatory interface. Requires executive presence and deep understanding of organizational risk appetite.",
+              "currentFTE": 2,
+              "estimatedSpend": 340000
+            }
+          ]
+        },
+        {
+          "name": "Defense",
+          "roles": [
+            {
+              "roleName": "SOC Analyst",
+              "level": "L1",
+              "candidateForOffshore": "Y",
+              "recommendation": "Y",
+              "qualitativeWhy": "24/7 alert triage and initial investigation. Well-suited for follow-the-sun offshore model.",
+              "currentFTE": 12,
+              "estimatedSpend": 720000
+            },
+            {
+              "roleName": "Incident Responder",
+              "level": "L2",
+              "candidateForOffshore": "Y",
+              "recommendation": "P",
+              "qualitativeWhy": "Containment and remediation can be partially offshored, but major incidents require on-site coordination and executive communication.",
+              "currentFTE": 4,
+              "estimatedSpend": 400000
+            },
+            {
+              "roleName": "Threat Hunter",
+              "level": "L3",
+              "candidateForOffshore": "N",
+              "recommendation": "N",
+              "qualitativeWhy": "Proactive threat intelligence requires deep organizational context, security clearance considerations, and proprietary tool expertise.",
+              "currentFTE": 3,
+              "estimatedSpend": 510000
+            },
+            {
+              "roleName": "Security Architect",
+              "level": "L4",
+              "candidateForOffshore": "N",
+              "recommendation": "N",
+              "qualitativeWhy": "Strategic security design and enterprise risk decisions. Core leadership function requiring institutional trust.",
+              "currentFTE": 1,
+              "estimatedSpend": 220000
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "news",
+      "name": "News",
+      "description": "News & Media Operations",
+      "departments": [
+        {
+          "name": "Audience & Social",
+          "roles": [
+            {
+              "roleName": "Vertical Video Journalist",
+              "level": "L1",
+              "candidateForOffshore": "Y",
+              "recommendation": "Y",
+              "qualitativeWhy": "Scalable production — short-form video editing, social clip packaging. High volume, templated workflows.",
+              "currentFTE": 10,
+              "estimatedSpend": 500000
+            },
+            {
+              "roleName": "Social Monitor",
+              "level": "L1",
+              "candidateForOffshore": "Y",
+              "recommendation": "Y",
+              "qualitativeWhy": "Real-time social listening and sentiment tracking. Process-driven with clear escalation protocols.",
+              "currentFTE": 6,
+              "estimatedSpend": 300000
+            },
+            {
+              "roleName": "SEO Metadata Tagger",
+              "level": "L1",
+              "candidateForOffshore": "Y",
+              "recommendation": "Y",
+              "qualitativeWhy": "High-volume tagging and metadata optimization. Follows established guidelines with minimal editorial judgment.",
+              "currentFTE": 4,
+              "estimatedSpend": 200000
+            },
+            {
+              "roleName": "Audience Strategy Lead",
+              "level": "L3",
+              "candidateForOffshore": "N",
+              "recommendation": "N",
+              "qualitativeWhy": "Requires deep understanding of local market dynamics, advertiser relationships, and brand positioning.",
+              "currentFTE": 2,
+              "estimatedSpend": 280000
+            }
+          ]
+        },
+        {
+          "name": "Editorial",
+          "roles": [
+            {
+              "roleName": "Copy Editor",
+              "level": "L2",
+              "candidateForOffshore": "Y",
+              "recommendation": "P",
+              "qualitativeWhy": "Routine copy editing can be offshored, but local style guides and cultural context may require partial onshore oversight.",
+              "currentFTE": 5,
+              "estimatedSpend": 325000
+            },
+            {
+              "roleName": "Investigative Journalist",
+              "level": "L4",
+              "candidateForOffshore": "N",
+              "recommendation": "N",
+              "qualitativeWhy": "High brand risk. Requires local expertise, source relationships, legal awareness, and deep community trust.",
+              "currentFTE": 3,
+              "estimatedSpend": 450000
+            },
+            {
+              "roleName": "Live News Anchor",
+              "level": "L4",
+              "candidateForOffshore": "N",
+              "recommendation": "N",
+              "qualitativeWhy": "On-air talent requires physical presence, cultural awareness, and real-time editorial judgment. Core brand asset.",
+              "currentFTE": 4,
+              "estimatedSpend": 800000
+            },
+            {
+              "roleName": "Local Beat Reporter",
+              "level": "L3",
+              "candidateForOffshore": "N",
+              "recommendation": "N",
+              "qualitativeWhy": "Requires deep local community trust, physical presence at events, and source network cultivation.",
+              "currentFTE": 8,
+              "estimatedSpend": 640000
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "data",
+      "name": "Data",
+      "description": "Data Engineering & Science",
+      "departments": [
+        {
+          "name": "Data Engineering",
+          "roles": [
+            {
+              "roleName": "Data Engineer",
+              "level": "L1",
+              "candidateForOffshore": "Y",
+              "recommendation": "Y",
+              "qualitativeWhy": "ETL pipeline maintenance, SQL cleanup, and report automation. Standardized work with clear specifications.",
+              "currentFTE": 8,
+              "estimatedSpend": 560000
+            },
+            {
+              "roleName": "Data Engineer II",
+              "level": "L2",
+              "candidateForOffshore": "Y",
+              "recommendation": "Y",
+              "qualitativeWhy": "Pipeline optimization and data quality monitoring. Process-driven with established frameworks.",
+              "currentFTE": 5,
+              "estimatedSpend": 475000
+            },
+            {
+              "roleName": "Senior Data Engineer",
+              "level": "L3",
+              "candidateForOffshore": "N",
+              "recommendation": "P",
+              "qualitativeWhy": "Architecture decisions and cross-team data modeling. Partial offshoring possible for implementation, but design should remain internal.",
+              "currentFTE": 3,
+              "estimatedSpend": 420000
+            }
+          ]
+        },
+        {
+          "name": "Data Science & AI",
+          "roles": [
+            {
+              "roleName": "Data Analyst",
+              "level": "L1",
+              "candidateForOffshore": "Y",
+              "recommendation": "Y",
+              "qualitativeWhy": "Report generation, dashboard maintenance, and ad-hoc queries. Well-documented, repeatable tasks.",
+              "currentFTE": 6,
+              "estimatedSpend": 390000
+            },
+            {
+              "roleName": "Data Scientist",
+              "level": "L3",
+              "candidateForOffshore": "N",
+              "recommendation": "N",
+              "qualitativeWhy": "Predictive modeling requires deep domain knowledge, IP sensitivity, and strategic alignment with business goals.",
+              "currentFTE": 4,
+              "estimatedSpend": 560000
+            },
+            {
+              "roleName": "ML Architect",
+              "level": "L4",
+              "candidateForOffshore": "N",
+              "recommendation": "N",
+              "qualitativeWhy": "Proprietary model development. Core IP creation requiring strategic vision, security clearance, and organizational trust.",
+              "currentFTE": 2,
+              "estimatedSpend": 440000
+            },
+            {
+              "roleName": "AI Ethics Lead",
+              "level": "L4",
+              "candidateForOffshore": "N",
+              "recommendation": "N",
+              "qualitativeWhy": "Strategic governance role. Requires deep understanding of regulatory landscape, company values, and stakeholder relationships.",
+              "currentFTE": 1,
+              "estimatedSpend": 200000
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "product",
+      "name": "Product",
+      "description": "Product Design & Management",
+      "departments": [
+        {
+          "name": "User Experience",
+          "roles": [
+            {
+              "roleName": "UI Production Designer",
+              "level": "L2",
+              "candidateForOffshore": "Y",
+              "recommendation": "Y",
+              "qualitativeWhy": "Asset creation — icons, mockups, design system maintenance. Templated work with clear brand guidelines.",
+              "currentFTE": 6,
+              "estimatedSpend": 420000
+            },
+            {
+              "roleName": "Prototype Tester",
+              "level": "L1",
+              "candidateForOffshore": "Y",
+              "recommendation": "Y",
+              "qualitativeWhy": "Usability testing execution following predefined scripts. Quantitative data collection role.",
+              "currentFTE": 4,
+              "estimatedSpend": 220000
+            },
+            {
+              "roleName": "Lead UX Researcher",
+              "level": "L3",
+              "candidateForOffshore": "N",
+              "recommendation": "N",
+              "qualitativeWhy": "Requires direct user empathy, cultural context, and strategic insight into user behavior. High-nuance qualitative work.",
+              "currentFTE": 2,
+              "estimatedSpend": 280000
+            },
+            {
+              "roleName": "Principal Product Designer",
+              "level": "L4",
+              "candidateForOffshore": "N",
+              "recommendation": "N",
+              "qualitativeWhy": "Strategic design leadership. Defines product vision, mentors team, and interfaces with executive stakeholders.",
+              "currentFTE": 1,
+              "estimatedSpend": 200000
+            }
+          ]
+        },
+        {
+          "name": "Product Management",
+          "roles": [
+            {
+              "roleName": "Product Analyst",
+              "level": "L1",
+              "candidateForOffshore": "Y",
+              "recommendation": "Y",
+              "qualitativeWhy": "Feature analytics, A/B test reporting, and competitive research. Data-driven, process-oriented work.",
+              "currentFTE": 3,
+              "estimatedSpend": 195000
+            },
+            {
+              "roleName": "Product Manager",
+              "level": "L3",
+              "candidateForOffshore": "N",
+              "recommendation": "N",
+              "qualitativeWhy": "Strategic product decisions requiring deep customer empathy, cross-functional leadership, and market intuition.",
+              "currentFTE": 4,
+              "estimatedSpend": 600000
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "development",
+      "name": "Development",
+      "description": "Software Engineering",
+      "departments": [
+        {
+          "name": "Core Engineering",
+          "roles": [
+            {
+              "roleName": "Technical Writer",
+              "level": "L1",
+              "candidateForOffshore": "Y",
+              "recommendation": "Y",
+              "qualitativeWhy": "Documentation, API guides, and internal wiki maintenance. Well-structured, templated deliverables.",
+              "currentFTE": 4,
+              "estimatedSpend": 240000
+            },
+            {
+              "roleName": "QA Engineer",
+              "level": "L1",
+              "candidateForOffshore": "Y",
+              "recommendation": "Y",
+              "qualitativeWhy": "Manual testing, unit test writing, and regression test execution. Follows established test plans.",
+              "currentFTE": 8,
+              "estimatedSpend": 480000
+            },
+            {
+              "roleName": "Front-end Developer",
+              "level": "L2",
+              "candidateForOffshore": "Y",
+              "recommendation": "Y",
+              "qualitativeWhy": "UI maintenance, component library updates, and bug fixes. Well-documented with design system specs.",
+              "currentFTE": 6,
+              "estimatedSpend": 510000
+            },
+            {
+              "roleName": "Lead Architect",
+              "level": "L4",
+              "candidateForOffshore": "N",
+              "recommendation": "N",
+              "qualitativeWhy": "System architecture and strategic technical decisions. Core leadership requiring deep institutional knowledge.",
+              "currentFTE": 2,
+              "estimatedSpend": 440000
+            },
+            {
+              "roleName": "Security Engineer",
+              "level": "L3",
+              "candidateForOffshore": "N",
+              "recommendation": "N",
+              "qualitativeWhy": "Security-critical role. Requires security clearance, deep system knowledge, and trusted access to production systems.",
+              "currentFTE": 3,
+              "estimatedSpend": 450000
+            },
+            {
+              "roleName": "DevOps / Cloud Lead",
+              "level": "L3",
+              "candidateForOffshore": "N",
+              "recommendation": "N",
+              "qualitativeWhy": "Infrastructure architecture and cloud strategy. Requires trusted access and deep platform knowledge.",
+              "currentFTE": 2,
+              "estimatedSpend": 340000
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "business",
+      "name": "Business",
+      "description": "Finance & Administration",
+      "departments": [
+        {
+          "name": "Finance & Admin",
+          "roles": [
+            {
+              "roleName": "Accounts Payable Specialist",
+              "level": "L1",
+              "candidateForOffshore": "Y",
+              "recommendation": "Y",
+              "qualitativeWhy": "Invoice processing, payment scheduling, and vendor management. High-volume, process-driven work.",
+              "currentFTE": 5,
+              "estimatedSpend": 250000
+            },
+            {
+              "roleName": "Accounts Receivable Specialist",
+              "level": "L1",
+              "candidateForOffshore": "Y",
+              "recommendation": "Y",
+              "qualitativeWhy": "Collections, billing reconciliation, and cash application. Standardized workflows with clear SLAs.",
+              "currentFTE": 4,
+              "estimatedSpend": 200000
+            },
+            {
+              "roleName": "Payroll Processor",
+              "level": "L2",
+              "candidateForOffshore": "Y",
+              "recommendation": "P",
+              "qualitativeWhy": "Routine payroll processing can be offshored, but compliance with local tax and labor laws requires partial onshore oversight.",
+              "currentFTE": 3,
+              "estimatedSpend": 195000
+            },
+            {
+              "roleName": "Strategic Financial Analyst",
+              "level": "L4",
+              "candidateForOffshore": "N",
+              "recommendation": "N",
+              "qualitativeWhy": "M&A analysis, strategic financial modeling, and executive advisory. Requires deep organizational context and trust.",
+              "currentFTE": 2,
+              "estimatedSpend": 340000
+            },
+            {
+              "roleName": "HR Business Partner",
+              "level": "L3",
+              "candidateForOffshore": "N",
+              "recommendation": "N",
+              "qualitativeWhy": "Strategic HR decisions requiring local labor law expertise, cultural sensitivity, and trusted employee relationships.",
+              "currentFTE": 3,
+              "estimatedSpend": 330000
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

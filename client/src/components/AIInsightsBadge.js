@@ -1,17 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { api } from '../utils/api';
+import React, { useState, useMemo } from 'react';
+import { analyzeInsights } from '../utils/aiEngine';
 
 export default function AIInsightsBadge({ role }) {
-  const [insights, setInsights] = useState(null);
   const [showTooltip, setShowTooltip] = useState(false);
 
-  useEffect(() => {
-    api.getAIInsights({
-      qualitative_why: role.qualitative_why,
-      role_name: role.role_name,
-      level: role.level,
-    }).then(setInsights).catch(() => {});
-  }, [role.qualitative_why, role.role_name, role.level]);
+  const insights = useMemo(() => analyzeInsights({
+    qualitative_why: role.qualitative_why,
+    role_name: role.role_name,
+    level: role.level,
+  }), [role.qualitative_why, role.role_name, role.level]);
 
   if (!insights || !insights.hasHighQualityLossRisk) return null;
 
@@ -31,7 +28,7 @@ export default function AIInsightsBadge({ role }) {
         onMouseEnter={() => setShowTooltip(true)}
         onMouseLeave={() => setShowTooltip(false)}
       >
-        ⚠ {insights.severity.toUpperCase()}
+        {insights.severity.toUpperCase()}
       </button>
 
       {showTooltip && (
