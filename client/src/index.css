@@ -1,0 +1,56 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gwoe-bg text-gwoe-text font-sans antialiased;
+    margin: 0;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-gwoe-bg;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gwoe-border rounded-full;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-gwoe-muted;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-gwoe-card border border-gwoe-border rounded-lg;
+  }
+  .btn-primary {
+    @apply bg-gwoe-accent hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors;
+  }
+  .btn-secondary {
+    @apply bg-gwoe-border hover:bg-slate-600 text-gwoe-text px-4 py-2 rounded-md text-sm font-medium transition-colors;
+  }
+  .btn-danger {
+    @apply bg-red-900/50 hover:bg-red-800 text-red-300 px-4 py-2 rounded-md text-sm font-medium transition-colors;
+  }
+  .input-field {
+    @apply bg-gwoe-bg border border-gwoe-border rounded-md px-3 py-2 text-gwoe-text text-sm focus:outline-none focus:border-gwoe-accent focus:ring-1 focus:ring-gwoe-accent;
+  }
+  .badge-yes {
+    @apply bg-emerald-900/50 text-emerald-400 border border-emerald-700/50 px-2 py-0.5 rounded text-xs font-medium;
+  }
+  .badge-no {
+    @apply bg-red-900/50 text-red-400 border border-red-700/50 px-2 py-0.5 rounded text-xs font-medium;
+  }
+  .badge-partial {
+    @apply bg-amber-900/50 text-amber-400 border border-amber-700/50 px-2 py-0.5 rounded text-xs font-medium;
+  }
+  .level-badge {
+    @apply font-mono text-xs px-2 py-0.5 rounded;
+  }
+  .glow-border {
+    @apply border border-gwoe-accent/30 shadow-[0_0_15px_rgba(59,130,246,0.1)];
+  }
+}

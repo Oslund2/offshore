@@ -1,0 +1,16 @@
+{
+  "name": "gwoe-server",
+  "version": "1.0.0",
+  "description": "Global Workforce Optimization Engine - Backend",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "better-sqlite3": "^11.0.0",
+    "uuid": "^9.0.0"
+  }
+}
