@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useApi } from '../utils/ApiContext';
 import { formatCurrency, getLevelColor, getRecommendationBadge } from '../utils/format';
+import { getSliderAdjustedRecommendation, getSliderAdjustmentLabel } from '../utils/sliderLogic';
 import RiskAssessmentModal from './RiskAssessmentModal';
 import AIInsightsBadge from './AIInsightsBadge';
 
@@ -176,7 +177,13 @@ export default function RoleTable({ roles, departmentId, onDataChange, costRiskS
                   </td>
                 </tr>
               ) : (
-                <tr key={role.id} className="border-b border-gwoe-border/50 hover:bg-gwoe-bg/50 transition-colors">
+                (() => {
+                  const adjustedRec = getSliderAdjustedRecommendation(role.recommendation, role.level, role.qualitative_why, costRiskSlider);
+                  const adjustment = getSliderAdjustmentLabel(role.recommendation, adjustedRec);
+                  const badge = getRecommendationBadge(adjustedRec);
+                  const isAdjusted = adjustedRec !== role.recommendation;
+                  return (
+                <tr key={role.id} className={`border-b border-gwoe-border/50 hover:bg-gwoe-bg/50 transition-colors ${isAdjusted ? 'bg-gwoe-accent/[0.03]' : ''}`}>
                   <td className="py-3 px-3 font-medium text-white">{role.role_name}</td>
                   <td className="py-3 px-2 text-center">
                     <span className={`level-badge ${getLevelColor(role.level)}`}>{role.level}</span>
@@ -187,9 +194,16 @@ export default function RoleTable({ roles, departmentId, onDataChange, costRiskS
                     </span>
                   </td>
                   <td className="py-3 px-2 text-center">
-                    <span className={getRecommendationBadge(role.recommendation).class}>
-                      {getRecommendationBadge(role.recommendation).label}
-                    </span>
+                    <div>
+                      <span className={badge.class}>
+                        {badge.label}
+                      </span>
+                      {adjustment && (
+                        <div className={`text-xs mt-0.5 ${adjustment.color}`} title={`Original: ${getRecommendationBadge(role.recommendation).label}`}>
+                          {adjustment.text}
+                        </div>
+                      )}
+                    </div>
                   </td>
                   <td className="py-3 px-3 text-gwoe-muted text-xs max-w-xs truncate" title={role.qualitative_why}>
                     {role.qualitative_why}
@@ -223,6 +237,8 @@ export default function RoleTable({ roles, departmentId, onDataChange, costRiskS
                     </div>
                   </td>
                 </tr>
+                  );
+                })()
               )
             ))}
 

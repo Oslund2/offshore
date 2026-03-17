@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useApi } from '../utils/ApiContext';
 import { formatCurrency } from '../utils/format';
+import { getSliderAdjustedTotals } from '../utils/sliderLogic';
 import RoleTable from '../components/RoleTable';
 
 export default function BusinessUnitView({ unitId, costRiskSlider, onDataChange }) {
@@ -37,17 +38,33 @@ export default function BusinessUnitView({ unitId, costRiskSlider, onDataChange 
 
   if (!unit) return <p className="text-gwoe-muted">Unit not found.</p>;
 
-  // Calculate unit-level stats
+  // Calculate unit-level stats with slider adjustment
   const allRoles = unit.departments.flatMap(d => d.roles);
   const totalFTE = allRoles.reduce((s, r) => s + r.current_fte, 0);
   const totalSpend = allRoles.reduce((s, r) => s + r.estimated_spend, 0);
-  const offshoreRoles = allRoles.filter(r => r.recommendation === 'Y');
-  const offshoreFTE = offshoreRoles.reduce((s, r) => s + r.current_fte, 0);
-  const offshoreSpend = offshoreRoles.reduce((s, r) => s + r.estimated_spend, 0);
-  const savingsEstimate = Math.round(offshoreSpend * 0.55);
+  const adjusted = getSliderAdjustedTotals(allRoles, costRiskSlider);
+  const savingsEstimate = Math.round(adjusted.offshoreSpend * 0.55);
+  const sliderIsNeutral = costRiskSlider >= 40 && costRiskSlider <= 60;
 
   return (
     <div className="space-y-6">
+      {/* Slider impact banner */}
+      {!sliderIsNeutral && (
+        <div className={`rounded-md px-4 py-2.5 text-xs flex items-center gap-2 ${
+          costRiskSlider > 60
+            ? 'bg-gwoe-amber/10 border border-gwoe-amber/30 text-gwoe-amber'
+            : 'bg-gwoe-green/10 border border-gwoe-green/30 text-gwoe-green'
+        }`}>
+          <span>{costRiskSlider > 60 ? '⚡' : '🛡'}</span>
+          <span>
+            <strong>Slider Active ({costRiskSlider > 60 ? 'Max Savings' : 'Max Quality'}):</strong>{' '}
+            AI is {costRiskSlider > 60 ? 'pushing more roles toward offshoring' : 'pulling roles back to retain'}.
+            Adjusted recommendations shown below with{' '}
+            <span className="font-medium">"Slider:"</span> labels.
+          </span>
+        </div>
+      )}
+
       {/* Unit Summary Cards */}
       <div className="grid grid-cols-5 gap-4">
         <div className="card p-4">
@@ -64,8 +81,8 @@ export default function BusinessUnitView({ unitId, costRiskSlider, onDataChange 
         </div>
         <div className="card p-4 glow-border">
           <p className="text-xs text-gwoe-green uppercase tracking-wider">Offshore FTE</p>
-          <p className="text-2xl font-semibold text-gwoe-green mt-1">{offshoreFTE}</p>
-          <p className="text-xs text-gwoe-muted">{Math.round((offshoreFTE / totalFTE) * 100)}% of total</p>
+          <p className="text-2xl font-semibold text-gwoe-green mt-1">{adjusted.offshoreFTE}</p>
+          <p className="text-xs text-gwoe-muted">{totalFTE > 0 ? Math.round((adjusted.offshoreFTE / totalFTE) * 100) : 0}% of total</p>
         </div>
         <div className="card p-4 glow-border">
           <p className="text-xs text-gwoe-green uppercase tracking-wider">Est. Savings</p>
