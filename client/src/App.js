@@ -17,8 +17,8 @@ export default function App() {
   const [activeUnitId, setActiveUnitId] = useState(null);
   const [rollup, setRollup] = useState(null);
   const [costRiskSlider, setCostRiskSlider] = useState(50);
-  const [loading, setLoading] = useState(true);
-  const [needsSetup, setNeedsSetup] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [modeSelected, setModeSelected] = useState(false);
   const [seeding, setSeeding] = useState(false);
   const [error, setError] = useState(null);
   const [isDemo, setIsDemo] = useState(false);
@@ -34,29 +34,20 @@ export default function App() {
       ]);
       setBusinessUnits(units);
       setRollup(rollupData);
-      if (!units || units.length === 0) {
-        setNeedsSetup(true);
-      } else {
-        setNeedsSetup(false);
-      }
     } catch (err) {
       console.error('Failed to load data:', err);
       setError(err.message);
-      setNeedsSetup(true);
     } finally {
       setLoading(false);
     }
   }, [api]);
 
-  useEffect(() => { loadData(); }, [loadData]);
-
   const enterDemoMode = async () => {
     setIsDemo(true);
     setApi(demoApi);
-    setNeedsSetup(false);
+    setModeSelected(true);
     setLoading(true);
     setError(null);
-    // Small delay for state to settle
     setTimeout(async () => {
       try {
         const [units, rollupData] = await Promise.all([
@@ -73,12 +64,35 @@ export default function App() {
     }, 100);
   };
 
+  const enterLiveMode = async () => {
+    setIsDemo(false);
+    setApi(supabaseApi);
+    setModeSelected(true);
+    setLoading(true);
+    setError(null);
+    try {
+      const [units, rollupData] = await Promise.all([
+        supabaseApi.getBusinessUnits(),
+        supabaseApi.getRollup(),
+      ]);
+      setBusinessUnits(units);
+      setRollup(rollupData);
+      if (!units || units.length === 0) {
+        setError('Connected but no data found. Seed the database first.');
+      }
+    } catch (err) {
+      console.error('Failed to connect:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSeed = async () => {
     setSeeding(true);
     try {
       await seedSupabase();
-      setNeedsSetup(false);
-      await loadData();
+      await loadData(supabaseApi);
     } catch (err) {
       console.error('Seed failed:', err);
       setError(`Seed failed: ${err.message}`);
@@ -101,85 +115,100 @@ export default function App() {
       <div className="flex items-center justify-center h-screen bg-gwoe-bg">
         <div className="text-center">
           <div className="w-12 h-12 border-2 border-gwoe-accent border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gwoe-muted text-sm">{isDemo ? 'Loading Demo...' : 'Initializing GWOE...'}</p>
+          <p className="text-gwoe-muted text-sm">{isDemo ? 'Loading Demo...' : 'Connecting to Supabase...'}</p>
         </div>
       </div>
     );
   }
 
-  if (needsSetup) {
+  if (!modeSelected) {
+    const hasSupabase = process.env.REACT_APP_SUPABASE_URL && process.env.REACT_APP_SUPABASE_KEY;
     return (
       <div className="flex items-center justify-center min-h-screen bg-gwoe-bg p-6">
-        <div className="card p-8 max-w-2xl w-full">
-          <div className="text-center mb-6">
-            <h1 className="text-2xl font-bold text-white mb-1">GWOE</h1>
+        <div className="card p-8 max-w-3xl w-full">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-white mb-2">GWOE</h1>
             <p className="text-sm text-gwoe-muted">Global Workforce Optimization Engine</p>
+            <p className="text-xs text-gwoe-muted mt-2">Select a mode to get started</p>
           </div>
 
           {error && (
-            <div className="bg-red-900/30 border border-red-700/50 rounded-md p-3 mb-5 text-left">
+            <div className="bg-red-900/30 border border-red-700/50 rounded-md p-3 mb-6 text-left">
               <p className="text-xs text-red-400 font-mono break-all">{error}</p>
             </div>
           )}
 
-          {/* Demo Mode — Primary CTA */}
-          <div className="bg-gwoe-accent/5 border border-gwoe-accent/30 rounded-lg p-5 mb-6">
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-lg bg-gwoe-accent/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                <span className="text-lg">▶</span>
-              </div>
-              <div className="flex-1">
-                <h3 className="text-sm font-semibold text-white mb-1">Launch Demo Mode</h3>
-                <p className="text-xs text-gwoe-muted mb-3">
-                  Explore GWOE instantly with realistic pre-loaded data — 42 roles across 6 business units
-                  (Cyber, News, Data, Product, Development, Business). Full CRUD, AI insights, savings calculator,
-                  and executive reports all work in demo mode. No database needed.
-                </p>
-                <button onClick={enterDemoMode} className="btn-primary px-6">
-                  Enter Demo Mode
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Divider */}
-          <div className="flex items-center gap-4 mb-6">
-            <div className="flex-1 h-px bg-gwoe-border"></div>
-            <span className="text-xs text-gwoe-muted">or connect to Supabase</span>
-            <div className="flex-1 h-px bg-gwoe-border"></div>
-          </div>
-
-          {/* Supabase Setup */}
-          <div className="bg-gwoe-bg rounded-lg p-5 border border-gwoe-border">
-            <h3 className="text-sm font-semibold text-white mb-3">Connect to Supabase (Persistent Storage)</h3>
-
-            <div className="space-y-3 text-xs text-gwoe-muted">
-              <div className="flex items-start gap-2">
-                <span className={`font-mono font-bold ${process.env.REACT_APP_SUPABASE_URL ? 'text-gwoe-green' : 'text-gwoe-red'}`}>
-                  {process.env.REACT_APP_SUPABASE_URL ? '✓' : '✗'}
-                </span>
+          <div className="grid grid-cols-2 gap-6">
+            {/* Demo Mode Card */}
+            <div className="bg-gwoe-accent/5 border-2 border-gwoe-accent/40 rounded-xl p-6 flex flex-col">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 rounded-xl bg-gwoe-accent/20 flex items-center justify-center flex-shrink-0">
+                  <span className="text-2xl">▶</span>
+                </div>
                 <div>
-                  <span className="text-white">REACT_APP_SUPABASE_URL</span>
-                  <span className="ml-2">{process.env.REACT_APP_SUPABASE_URL ? 'Connected' : 'Not set in Netlify env vars'}</span>
+                  <h3 className="text-base font-bold text-white">Demo Mode</h3>
+                  <span className="text-xs bg-gwoe-accent/20 text-gwoe-accent px-2 py-0.5 rounded">Recommended</span>
                 </div>
               </div>
-              <div className="flex items-start gap-2">
-                <span className={`font-mono font-bold ${process.env.REACT_APP_SUPABASE_KEY ? 'text-gwoe-green' : 'text-gwoe-red'}`}>
-                  {process.env.REACT_APP_SUPABASE_KEY ? '✓' : '✗'}
-                </span>
-                <div>
-                  <span className="text-white">REACT_APP_SUPABASE_KEY</span>
-                  <span className="ml-2">{process.env.REACT_APP_SUPABASE_KEY ? 'Connected' : 'Not set in Netlify env vars'}</span>
-                </div>
-              </div>
+              <p className="text-xs text-gwoe-muted mb-4 flex-1">
+                Explore instantly with pre-loaded sample data. 42 roles across 6 business units with full CRUD,
+                AI insights, savings calculator, and executive reports. No database required.
+              </p>
+              <ul className="text-xs text-gwoe-muted space-y-1.5 mb-5">
+                <li className="flex items-center gap-2"><span className="text-gwoe-green">&#10003;</span> No setup needed</li>
+                <li className="flex items-center gap-2"><span className="text-gwoe-green">&#10003;</span> 42 pre-loaded roles</li>
+                <li className="flex items-center gap-2"><span className="text-gwoe-green">&#10003;</span> All features active</li>
+                <li className="flex items-center gap-2"><span className="text-gwoe-amber">!</span> Data resets on refresh</li>
+              </ul>
+              <button onClick={enterDemoMode} className="btn-primary w-full py-3 text-sm font-semibold">
+                Launch Demo Mode
+              </button>
             </div>
 
-            {process.env.REACT_APP_SUPABASE_URL && process.env.REACT_APP_SUPABASE_KEY && (
-              <div className="mt-4">
-                <p className="text-xs text-gwoe-muted mb-2">Run this SQL in Supabase SQL Editor first:</p>
-                <details className="mb-3">
-                  <summary className="text-xs text-gwoe-accent cursor-pointer hover:underline">Show CREATE TABLE SQL</summary>
-                  <pre className="text-xs text-gwoe-accent font-mono mt-2 p-3 bg-gwoe-card rounded overflow-x-auto whitespace-pre-wrap">
+            {/* Live Mode Card */}
+            <div className={`border-2 rounded-xl p-6 flex flex-col ${hasSupabase ? 'bg-gwoe-green/5 border-gwoe-green/40' : 'bg-gwoe-bg border-gwoe-border'}`}>
+              <div className="flex items-center gap-3 mb-4">
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${hasSupabase ? 'bg-gwoe-green/20' : 'bg-gwoe-border'}`}>
+                  <span className="text-2xl">&#9879;</span>
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white">Live Mode</h3>
+                  <span className={`text-xs px-2 py-0.5 rounded ${hasSupabase ? 'bg-gwoe-green/20 text-gwoe-green' : 'bg-gwoe-border text-gwoe-muted'}`}>
+                    {hasSupabase ? 'Supabase Connected' : 'Setup Required'}
+                  </span>
+                </div>
+              </div>
+              <p className="text-xs text-gwoe-muted mb-4 flex-1">
+                Connect to Supabase for persistent data storage. Enter your own workforce data, and changes are saved permanently.
+                Requires Supabase environment variables.
+              </p>
+              <ul className="text-xs text-gwoe-muted space-y-1.5 mb-5">
+                <li className="flex items-center gap-2">
+                  <span className={process.env.REACT_APP_SUPABASE_URL ? 'text-gwoe-green' : 'text-gwoe-red'}>
+                    {process.env.REACT_APP_SUPABASE_URL ? '✓' : '✗'}
+                  </span>
+                  REACT_APP_SUPABASE_URL
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className={process.env.REACT_APP_SUPABASE_KEY ? 'text-gwoe-green' : 'text-gwoe-red'}>
+                    {process.env.REACT_APP_SUPABASE_KEY ? '✓' : '✗'}
+                  </span>
+                  REACT_APP_SUPABASE_KEY
+                </li>
+                <li className="flex items-center gap-2"><span className="text-gwoe-green">&#10003;</span> Persistent data storage</li>
+                <li className="flex items-center gap-2"><span className="text-gwoe-green">&#10003;</span> Real workforce data</li>
+              </ul>
+              {hasSupabase ? (
+                <div className="space-y-2">
+                  <button onClick={enterLiveMode} className="w-full py-3 text-sm font-semibold bg-gwoe-green/20 text-gwoe-green border border-gwoe-green/30 rounded-md hover:bg-gwoe-green/30 transition-colors">
+                    Connect to Supabase
+                  </button>
+                  <details>
+                    <summary className="text-xs text-gwoe-accent cursor-pointer hover:underline">Setup: Create tables &amp; seed data</summary>
+                    <div className="mt-2 space-y-2">
+                      <details>
+                        <summary className="text-xs text-gwoe-muted cursor-pointer hover:underline">Show CREATE TABLE SQL</summary>
+                        <pre className="text-xs text-gwoe-accent font-mono mt-2 p-3 bg-gwoe-card rounded overflow-x-auto whitespace-pre-wrap">
 {`CREATE TABLE IF NOT EXISTS business_units (
   id TEXT PRIMARY KEY, name TEXT NOT NULL, description TEXT
 );
@@ -205,13 +234,20 @@ ALTER TABLE roles ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "public_access" ON business_units FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "public_access" ON departments FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "public_access" ON roles FOR ALL USING (true) WITH CHECK (true);`}
-                  </pre>
-                </details>
-                <button onClick={handleSeed} disabled={seeding} className="btn-secondary">
-                  {seeding ? 'Seeding...' : 'Seed Supabase Database'}
-                </button>
-              </div>
-            )}
+                        </pre>
+                      </details>
+                      <button onClick={handleSeed} disabled={seeding} className="btn-secondary text-xs">
+                        {seeding ? 'Seeding...' : 'Seed Sample Data'}
+                      </button>
+                    </div>
+                  </details>
+                </div>
+              ) : (
+                <div className="text-center py-3 text-xs text-gwoe-muted border border-gwoe-border rounded-md bg-gwoe-bg">
+                  Set env vars in Netlify to enable
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
