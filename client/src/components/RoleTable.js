@@ -155,7 +155,7 @@ export default function RoleTable({ roles, departmentId, onDataChange, costRiskS
                   <td className="py-2 px-2">
                     <input
                       type="number"
-                      className="bg-gwoe-card border border-gwoe-accent/40 rounded-md px-2 py-1.5 text-white text-sm text-right w-20 focus:outline-none focus:border-gwoe-accent"
+                      className="bg-gwoe-bg border border-gwoe-accent/40 rounded-md px-2 py-1.5 text-white text-sm text-right w-20 focus:outline-none focus:border-gwoe-accent"
                       value={editForm.current_fte}
                       onChange={e => setEditForm({ ...editForm, current_fte: Number(e.target.value) })}
                       placeholder="FTE"
@@ -164,7 +164,7 @@ export default function RoleTable({ roles, departmentId, onDataChange, costRiskS
                   <td className="py-2 px-3">
                     <input
                       type="number"
-                      className="bg-gwoe-card border border-gwoe-accent/40 rounded-md px-2 py-1.5 text-white text-sm text-right w-28 focus:outline-none focus:border-gwoe-accent"
+                      className="bg-gwoe-bg border border-gwoe-accent/40 rounded-md px-2 py-1.5 text-white text-sm text-right w-28 focus:outline-none focus:border-gwoe-accent"
                       value={editForm.estimated_spend}
                       onChange={e => setEditForm({ ...editForm, estimated_spend: Number(e.target.value) })}
                       placeholder="Spend"
