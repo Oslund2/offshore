@@ -36,7 +36,8 @@
     @apply bg-red-900/50 hover:bg-red-800 text-red-300 px-4 py-2 rounded-md text-sm font-medium transition-colors;
   }
   .input-field {
-    @apply bg-gwoe-bg border border-gwoe-border rounded-md px-3 py-2 text-gwoe-text text-sm focus:outline-none focus:border-gwoe-accent focus:ring-1 focus:ring-gwoe-accent;
+    @apply bg-gwoe-card border border-gwoe-border rounded-md px-3 py-2 text-white text-sm focus:outline-none focus:border-gwoe-accent focus:ring-1 focus:ring-gwoe-accent;
+    color-scheme: dark;
   }
   .badge-yes {
     @apply bg-emerald-900/50 text-emerald-400 border border-emerald-700/50 px-2 py-0.5 rounded text-xs font-medium;
