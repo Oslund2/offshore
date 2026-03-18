@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { api as supabaseApi } from './utils/api';
 import { demoApi } from './utils/demoApi';
-import { clearSupabase } from './utils/clearSupabase';
+import { resetSupabase } from './utils/resetSupabase';
 import { ApiProvider } from './utils/ApiContext';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
@@ -77,9 +77,15 @@ export default function App() {
     setMode('live');
     setInitialLoading(true);
     setError(null);
-    const units = await loadData(supabaseApi);
+    let units = await loadData(supabaseApi);
     if (units && units.length === 0) {
-      setError('Connected but no data found. Use "Manage Units" to add your workforce data.');
+      // Empty DB — seed with zeroed template so the structure is ready
+      try {
+        await resetSupabase();
+        units = await loadData(supabaseApi);
+      } catch (err) {
+        setError(`Failed to initialize template: ${err.message}`);
+      }
     }
     setInitialLoading(false);
   };
@@ -96,13 +102,11 @@ export default function App() {
 
   const handleClearDatabase = async () => {
     try {
-      await clearSupabase();
-      setBusinessUnits([]);
-      setAllRoles([]);
-      setRollup(null);
-      setError('Database cleared. Use "Manage Units" to add your workforce data.');
+      await resetSupabase();
+      await loadData(supabaseApi);
+      setError(null);
     } catch (err) {
-      setError(`Clear failed: ${err.message}`);
+      setError(`Reset failed: ${err.message}`);
     }
   };
 

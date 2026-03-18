@@ -40,10 +40,9 @@ export default function Settings({ onClearDatabase, isDemo }) {
           {/* Clear All Data */}
           <div className="flex items-start justify-between gap-6">
             <div>
-              <p className="text-sm font-semibold text-white">Clear All Data</p>
+              <p className="text-sm font-semibold text-white">Reset All Data</p>
               <p className="text-xs text-gwoe-muted mt-1">
-                Permanently delete all business units, departments, and roles from your Supabase database.
-                This cannot be undone.
+                Reset all figures to $0.00 and 0 FTE. Business units, departments, and roles remain — only your numbers are cleared.
               </p>
             </div>
             {!confirmClear ? (
@@ -51,7 +50,7 @@ export default function Settings({ onClearDatabase, isDemo }) {
                 onClick={() => setConfirmClear(true)}
                 className="px-4 py-2 text-xs font-semibold text-gwoe-red border border-gwoe-red/40 rounded-md hover:bg-gwoe-red/10 transition-colors whitespace-nowrap"
               >
-                Clear All Data
+                Reset All Data
               </button>
             ) : (
               <div className="flex items-center gap-2">
@@ -60,7 +59,7 @@ export default function Settings({ onClearDatabase, isDemo }) {
                   disabled={clearing}
                   className="px-4 py-2 text-xs font-semibold bg-gwoe-red text-white rounded-md hover:bg-gwoe-red/80 transition-colors whitespace-nowrap"
                 >
-                  {clearing ? 'Clearing...' : 'Yes, delete everything'}
+                  {clearing ? 'Resetting...' : 'Yes, reset everything'}
                 </button>
                 <button
                   onClick={() => setConfirmClear(false)}
