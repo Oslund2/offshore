@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { api as supabaseApi } from './utils/api';
 import { demoApi } from './utils/demoApi';
 import { seedSupabase } from './utils/seedSupabase';
+import { clearSupabase } from './utils/clearSupabase';
 import { ApiProvider } from './utils/ApiContext';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
@@ -29,18 +30,14 @@ export default function App() {
   const activeApi = mode === 'demo' ? demoApi : supabaseApi;
   const isDemo = mode === 'demo';
 
-  // Debug: track which source loaded the data
-  const [dataSource, setDataSource] = useState(null);
-  const [debugInfo, setDebugInfo] = useState(null);
+  const [clearing, setClearing] = useState(false);
 
   // Central data loader — fetches EVERYTHING, including per-role data.
   // This is the SINGLE source of truth. No child component fetches independently.
-  const loadData = async (api, sourceName) => {
-    // Clear stale data FIRST to prevent any bleed between modes
+  const loadData = async (api) => {
     setBusinessUnits([]);
     setAllRoles([]);
     setRollup(null);
-    setDataSource(null);
 
     try {
       setError(null);
@@ -49,7 +46,6 @@ export default function App() {
         api.getRollup(),
       ]);
 
-      // Fetch all roles with unit/dept context (needed for slider adjustments)
       const roles = [];
       for (const unit of units) {
         const full = await api.getBusinessUnit(unit.id);
@@ -63,12 +59,10 @@ export default function App() {
       setBusinessUnits(units);
       setRollup(rollupData);
       setAllRoles(roles);
-      setDataSource(sourceName);
       return units;
     } catch (err) {
       console.error('Failed to load data:', err);
-      setError(`[${sourceName}] ${err.message}`);
-      setDataSource(`${sourceName} (FAILED)`);
+      setError(err.message);
       return null;
     }
   };
@@ -77,7 +71,7 @@ export default function App() {
     setMode('demo');
     setInitialLoading(true);
     setError(null);
-    await loadData(demoApi, 'DEMO (in-memory)');
+    await loadData(demoApi);
     setInitialLoading(false);
   };
 
@@ -85,29 +79,9 @@ export default function App() {
     setMode('live');
     setInitialLoading(true);
     setError(null);
-
-    const sbUrl = process.env.REACT_APP_SUPABASE_URL || '(empty)';
-    const sbKey = process.env.REACT_APP_SUPABASE_KEY || '(empty)';
-    const info = { url: sbUrl.substring(0, 40), keyLen: sbKey.length };
-
-    // Direct fetch test — bypasses supabase-js to confirm connectivity
-    try {
-      const testUrl = `${sbUrl}/rest/v1/business_units?select=id&limit=1`;
-      const resp = await fetch(testUrl, {
-        headers: { apikey: sbKey, Authorization: `Bearer ${sbKey}` },
-      });
-      info.directTest = `${resp.status} ${resp.statusText}`;
-      const body = await resp.text();
-      info.directBody = body.substring(0, 100);
-    } catch (fetchErr) {
-      info.directTest = `FETCH_FAILED: ${fetchErr.message}`;
-    }
-
-    setDebugInfo(info);
-
-    const units = await loadData(supabaseApi, 'SUPABASE (live)');
+    const units = await loadData(supabaseApi);
     if (units && units.length === 0) {
-      setError('Connected but no data found. Add your workforce data to get started.');
+      setError('Connected but no data found. Use "Manage Units" to add your workforce data.');
     }
     setInitialLoading(false);
   };
@@ -118,7 +92,7 @@ export default function App() {
       await seedSupabase();
       setMode('live');
       setInitialLoading(true);
-      await loadData(supabaseApi, 'SUPABASE (post-seed)');
+      await loadData(supabaseApi);
       setInitialLoading(false);
     } catch (err) {
       console.error('Seed failed:', err);
@@ -135,7 +109,22 @@ export default function App() {
 
   // Background refresh — reloads all data from the current API
   const handleDataChange = async () => {
-    await loadData(activeApi, mode === 'demo' ? 'DEMO (refresh)' : 'SUPABASE (refresh)');
+    await loadData(activeApi);
+  };
+
+  const handleClearDatabase = async () => {
+    setClearing(true);
+    try {
+      await clearSupabase();
+      setBusinessUnits([]);
+      setAllRoles([]);
+      setRollup(null);
+      setError('Database cleared. Use "Manage Units" to add your workforce data.');
+    } catch (err) {
+      setError(`Clear failed: ${err.message}`);
+    } finally {
+      setClearing(false);
+    }
   };
 
   // Initial loading spinner — only before first data load
@@ -244,10 +233,10 @@ export default function App() {
     );
   }
 
-  // Compute data fingerprint for debug
+  // Detect if Supabase contains the demo seed data
   const totalSpend = allRoles.reduce((s, r) => s + r.estimated_spend, 0);
+  const hasSeedData = mode === 'live' && allRoles.length === 42 && totalSpend === 16255000;
 
-  // Main app — ApiProvider stays for mutation-only components (RoleTable, ManageUnits, BusinessUnitView)
   return (
     <ApiProvider api={activeApi}>
       <div className="flex h-screen bg-gwoe-bg overflow-hidden">
@@ -268,29 +257,24 @@ export default function App() {
             isDemo={isDemo}
           />
 
-          {/* Debug status bar — visible diagnostic */}
-          <div className={`px-4 py-1.5 text-xs font-mono flex flex-wrap items-center gap-x-4 gap-y-1 border-b ${
-            mode === 'live' ? 'bg-gwoe-green/10 border-gwoe-green/30 text-gwoe-green' : 'bg-gwoe-amber/10 border-gwoe-amber/30 text-gwoe-amber'
-          }`}>
-            <span>Mode: <strong>{mode}</strong></span>
-            <span>Source: <strong>{dataSource || 'none'}</strong></span>
-            <span>Roles: <strong>{allRoles.length}</strong></span>
-            <span>BUs: <strong>{businessUnits.length}</strong></span>
-            <span>Spend: <strong>${totalSpend.toLocaleString()}</strong></span>
-            {error && <span className="text-gwoe-red">ERR: {error}</span>}
-            {allRoles.length === 42 && totalSpend === 16255000 && (
-              <span className="text-gwoe-amber font-bold">[!! MATCHES DEMO SEED FINGERPRINT !!]</span>
-            )}
-            {debugInfo && (
-              <>
-                <span className="basis-full"></span>
-                <span>SB_URL: <strong>{debugInfo.url}</strong></span>
-                <span>KEY_LEN: <strong>{debugInfo.keyLen}</strong></span>
-                <span>DirectTest: <strong>{debugInfo.directTest}</strong></span>
-                {debugInfo.directBody && <span>Body: <strong>{debugInfo.directBody}</strong></span>}
-              </>
-            )}
-          </div>
+          {/* Seed data detected banner — only in Live Mode */}
+          {hasSeedData && (
+            <div className="mx-6 mt-4 bg-gwoe-amber/10 border border-gwoe-amber/30 rounded-md p-4 flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold text-gwoe-amber">Demo seed data detected in your database</p>
+                <p className="text-xs text-gwoe-muted mt-1">
+                  Your Supabase database contains the sample data (42 roles, 6 units). Clear it to start entering your own workforce data.
+                </p>
+              </div>
+              <button
+                onClick={handleClearDatabase}
+                disabled={clearing}
+                className="ml-4 px-4 py-2 text-xs font-semibold bg-gwoe-amber/20 text-gwoe-amber border border-gwoe-amber/30 rounded-md hover:bg-gwoe-amber/30 transition-colors whitespace-nowrap"
+              >
+                {clearing ? 'Clearing...' : 'Clear Seed Data'}
+              </button>
+            </div>
+          )}
 
           {error && (
             <div className="mx-6 mt-4 bg-red-900/30 border border-red-700/50 rounded-md p-3">
