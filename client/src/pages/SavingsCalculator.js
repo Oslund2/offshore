@@ -1,35 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useApi } from '../utils/ApiContext';
+import React, { useState } from 'react';
 import { formatCurrency } from '../utils/format';
 import { US_RATES, OFFSHORE_COUNTRIES, calculateRoleSavings } from '../utils/offshoreRates';
 
-export default function SavingsCalculator() {
-  const api = useApi();
-  const [roles, setRoles] = useState([]);
+// Pure display component — receives allRoles from App.js, no independent data fetching
+export default function SavingsCalculator({ allRoles }) {
+  const roles = allRoles || [];
   const [selectedCountries, setSelectedCountries] = useState(['india', 'philippines', 'poland']);
-  const [loading, setLoading] = useState(true);
-
-  const loadAllRoles = useCallback(async () => {
-    try {
-      const units = await api.getBusinessUnits();
-      const allRoles = [];
-      for (const unit of units) {
-        const full = await api.getBusinessUnit(unit.id);
-        for (const dept of full.departments) {
-          for (const role of dept.roles) {
-            allRoles.push({ ...role, unitName: unit.name, deptName: dept.name });
-          }
-        }
-      }
-      setRoles(allRoles);
-    } catch (err) {
-      console.error('Failed to load roles:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [api]);
-
-  useEffect(() => { loadAllRoles(); }, [loadAllRoles]);
 
   const toggleCountry = (id) => {
     setSelectedCountries(prev =>
@@ -62,12 +38,8 @@ export default function SavingsCalculator() {
     };
   });
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-2 border-gwoe-accent border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
+  if (roles.length === 0) {
+    return <p className="text-gwoe-muted">Loading savings calculator...</p>;
   }
 
   return (

@@ -16,6 +16,7 @@ export default function App() {
   // mode: null = not selected, 'demo' = in-memory, 'live' = supabase
   const [mode, setMode] = useState(null);
   const [businessUnits, setBusinessUnits] = useState([]);
+  const [allRoles, setAllRoles] = useState([]);
   const [activeView, setActiveView] = useState('dashboard');
   const [activeUnitId, setActiveUnitId] = useState(null);
   const [rollup, setRollup] = useState(null);
@@ -28,6 +29,8 @@ export default function App() {
   const activeApi = mode === 'demo' ? demoApi : supabaseApi;
   const isDemo = mode === 'demo';
 
+  // Central data loader — fetches EVERYTHING, including per-role data.
+  // This is the SINGLE source of truth. No child component fetches independently.
   const loadData = async (api) => {
     try {
       setError(null);
@@ -35,8 +38,21 @@ export default function App() {
         api.getBusinessUnits(),
         api.getRollup(),
       ]);
+
+      // Fetch all roles with unit/dept context (needed for slider adjustments)
+      const roles = [];
+      for (const unit of units) {
+        const full = await api.getBusinessUnit(unit.id);
+        for (const dept of full.departments) {
+          for (const role of dept.roles) {
+            roles.push({ ...role, unitId: unit.id, unitName: unit.name, deptName: dept.name });
+          }
+        }
+      }
+
       setBusinessUnits(units);
       setRollup(rollupData);
+      setAllRoles(roles);
       return units;
     } catch (err) {
       console.error('Failed to load data:', err);
@@ -85,7 +101,7 @@ export default function App() {
     setActiveUnitId(unitId);
   };
 
-  // Background refresh — does NOT unmount children
+  // Background refresh — reloads all data from the current API
   const handleDataChange = async () => {
     await loadData(activeApi);
   };
@@ -236,7 +252,7 @@ CREATE POLICY "public_access" ON roles FOR ALL USING (true) WITH CHECK (true);`}
     );
   }
 
-  // Main app — ApiProvider NEVER unmounts once mode is set
+  // Main app — ApiProvider stays for mutation-only components (RoleTable, ManageUnits, BusinessUnitView)
   return (
     <ApiProvider api={activeApi}>
       <div className="flex h-screen bg-gwoe-bg overflow-hidden">
@@ -258,7 +274,7 @@ CREATE POLICY "public_access" ON roles FOR ALL USING (true) WITH CHECK (true);`}
           />
           <main className="flex-1 overflow-y-auto p-6">
             {activeView === 'dashboard' && (
-              <DashboardView rollup={rollup} onNavigate={handleNavigate} costRiskSlider={costRiskSlider} />
+              <DashboardView allRoles={allRoles} onNavigate={handleNavigate} costRiskSlider={costRiskSlider} />
             )}
             {activeView === 'unit' && activeUnitId && (
               <BusinessUnitView
@@ -274,10 +290,10 @@ CREATE POLICY "public_access" ON roles FOR ALL USING (true) WITH CHECK (true);`}
               <ManageUnits onDataChange={handleDataChange} />
             )}
             {activeView === 'calculator' && (
-              <SavingsCalculator />
+              <SavingsCalculator allRoles={allRoles} />
             )}
             {activeView === 'command' && (
-              <AICommandCenter />
+              <AICommandCenter allRoles={allRoles} />
             )}
           </main>
         </div>

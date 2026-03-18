@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useApi } from '../utils/ApiContext';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { formatCurrency } from '../utils/format';
 import { analyzeInsights } from '../utils/aiEngine';
 import { US_RATES, OFFSHORE_COUNTRIES, scoreCountryFit } from '../utils/offshoreRates';
@@ -221,53 +220,33 @@ function ConfidenceRing({ value, size = 32 }) {
 }
 
 // ── Main Component ───────────────────────────────────────────────
-export default function AICommandCenter() {
-  const api = useApi();
+// Pure display component — receives allRoles from App.js, no independent data fetching
+export default function AICommandCenter({ allRoles }) {
   const [scanning, setScanning] = useState(true);
-  const [analysis, setAnalysis] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
   const [expandedContradiction, setExpandedContradiction] = useState(null);
 
-  const loadAndAnalyze = useCallback(async () => {
-    try {
-      const units = await api.getBusinessUnits();
-      const roles = [];
-      for (const unit of units) {
-        const full = await api.getBusinessUnit(unit.id);
-        for (const dept of full.departments) {
-          for (const role of dept.roles) {
-            roles.push({ ...role, unitId: unit.id, unitName: unit.name, deptName: dept.name });
-          }
-        }
-      }
-      const result = runFullAnalysis(roles);
-      setAnalysis(result);
-    } catch (err) {
-      console.error('AI Analysis failed:', err);
-    }
-  }, [api]);
-
-  useEffect(() => { loadAndAnalyze(); }, [loadAndAnalyze]);
+  // Memoize analysis so it only recomputes when allRoles changes
+  const analysis = useMemo(() => {
+    if (!allRoles || allRoles.length === 0) return null;
+    return runFullAnalysis(allRoles);
+  }, [allRoles]);
 
   const handleScanComplete = useCallback(() => setScanning(false), []);
 
   if (!analysis) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-2 border-gwoe-accent border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
+    return <p className="text-gwoe-muted">Loading AI Command Center...</p>;
   }
 
   if (scanning) {
     return <ScanAnimation onComplete={handleScanComplete} />;
   }
 
-  const { contradictions, quickWins, hiddenRisks, crossBU, waves, waveFit, allRoles } = analysis;
+  const { contradictions, quickWins, hiddenRisks, crossBU, waves, waveFit, allRoles: analyzedRoles } = analysis;
 
   // Aggregate stats
-  const totalRoles = allRoles.length;
-  const avgConfidence = Math.round(allRoles.reduce((s, r) => s + r._confidence, 0) / totalRoles);
+  const totalRoles = analyzedRoles.length;
+  const avgConfidence = Math.round(analyzedRoles.reduce((s, r) => s + r._confidence, 0) / totalRoles);
   const totalQuickWinSavings = quickWins.reduce((s, q) => s + q.savings, 0);
   const criticalIssues = contradictions.filter(c => c.type === 'critical_risk' || c.type === 'risky_offshore').length;
 
@@ -309,7 +288,7 @@ export default function AICommandCenter() {
             <ConfidenceRing value={avgConfidence} size={38} />
           </div>
           <button
-            onClick={() => { setScanning(true); loadAndAnalyze(); }}
+            onClick={() => setScanning(true)}
             className="px-3 py-2 text-xs bg-gwoe-accent/20 text-gwoe-accent rounded-md hover:bg-gwoe-accent/30 border border-gwoe-accent/30 transition-colors"
           >
             Re-scan
@@ -399,7 +378,7 @@ export default function AICommandCenter() {
                 { label: 'Low (40-59%)', min: 40, max: 60, color: 'bg-gwoe-amber', textColor: 'text-gwoe-amber' },
                 { label: 'Poor (<40%)', min: 0, max: 40, color: 'bg-gwoe-red', textColor: 'text-gwoe-red' },
               ].map(band => {
-                const count = allRoles.filter(r => r._confidence >= band.min && r._confidence < band.max).length;
+                const count = analyzedRoles.filter(r => r._confidence >= band.min && r._confidence < band.max).length;
                 const pct = totalRoles > 0 ? Math.round((count / totalRoles) * 100) : 0;
                 return (
                   <div key={band.label} className="text-center">
@@ -424,7 +403,7 @@ export default function AICommandCenter() {
             <div className="bg-gwoe-bg rounded-lg p-4 border border-gwoe-border space-y-3 text-sm text-gwoe-text leading-relaxed">
               <p>
                 Analysis of <strong className="text-white">{totalRoles} roles</strong> across{' '}
-                <strong className="text-white">{new Set(allRoles.map(r => r.unitName)).size} business units</strong>{' '}
+                <strong className="text-white">{new Set(analyzedRoles.map(r => r.unitName)).size} business units</strong>{' '}
                 reveals an average AI confidence of <strong className={avgConfidence >= 70 ? 'text-gwoe-green' : 'text-gwoe-amber'}>{avgConfidence}%</strong> in
                 current recommendations.
               </p>

@@ -1,34 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { useApi } from '../utils/ApiContext';
+import React from 'react';
 import { formatCurrency } from '../utils/format';
 import { getSliderAdjustedRecommendation } from '../utils/sliderLogic';
 
-export default function DashboardView({ rollup, onNavigate, costRiskSlider }) {
-  const api = useApi();
-  const [allRoles, setAllRoles] = useState([]);
-
-  useEffect(() => {
-    async function loadRoles() {
-      try {
-        const units = await api.getBusinessUnits();
-        const roles = [];
-        for (const unit of units) {
-          const full = await api.getBusinessUnit(unit.id);
-          for (const dept of full.departments) {
-            for (const role of dept.roles) {
-              roles.push({ ...role, unitId: unit.id, unitName: unit.name, deptName: dept.name });
-            }
-          }
-        }
-        setAllRoles(roles);
-      } catch (e) {
-        console.error('Failed to load roles for dashboard:', e);
-      }
-    }
-    loadRoles();
-  }, [api]);
-
-  if (!rollup && allRoles.length === 0) return <p className="text-gwoe-muted">Loading dashboard...</p>;
+// Pure display component — receives allRoles from App.js, no independent data fetching
+export default function DashboardView({ allRoles, onNavigate, costRiskSlider }) {
+  if (!allRoles || allRoles.length === 0) return <p className="text-gwoe-muted">Loading dashboard...</p>;
 
   // Recompute everything with slider adjustments
   const adjustedRoles = allRoles.map(r => ({
