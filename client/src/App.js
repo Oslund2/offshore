@@ -29,9 +29,18 @@ export default function App() {
   const activeApi = mode === 'demo' ? demoApi : supabaseApi;
   const isDemo = mode === 'demo';
 
+  // Debug: track which source loaded the data
+  const [dataSource, setDataSource] = useState(null);
+
   // Central data loader — fetches EVERYTHING, including per-role data.
   // This is the SINGLE source of truth. No child component fetches independently.
-  const loadData = async (api) => {
+  const loadData = async (api, sourceName) => {
+    // Clear stale data FIRST to prevent any bleed between modes
+    setBusinessUnits([]);
+    setAllRoles([]);
+    setRollup(null);
+    setDataSource(null);
+
     try {
       setError(null);
       const [units, rollupData] = await Promise.all([
@@ -53,10 +62,12 @@ export default function App() {
       setBusinessUnits(units);
       setRollup(rollupData);
       setAllRoles(roles);
+      setDataSource(sourceName);
       return units;
     } catch (err) {
       console.error('Failed to load data:', err);
-      setError(err.message);
+      setError(`[${sourceName}] ${err.message}`);
+      setDataSource(`${sourceName} (FAILED)`);
       return null;
     }
   };
@@ -65,7 +76,7 @@ export default function App() {
     setMode('demo');
     setInitialLoading(true);
     setError(null);
-    await loadData(demoApi);
+    await loadData(demoApi, 'DEMO (in-memory)');
     setInitialLoading(false);
   };
 
@@ -73,7 +84,7 @@ export default function App() {
     setMode('live');
     setInitialLoading(true);
     setError(null);
-    const units = await loadData(supabaseApi);
+    const units = await loadData(supabaseApi, 'SUPABASE (live)');
     if (units && units.length === 0) {
       setError('Connected but no data found. Seed the database first.');
     }
@@ -86,7 +97,7 @@ export default function App() {
       await seedSupabase();
       setMode('live');
       setInitialLoading(true);
-      await loadData(supabaseApi);
+      await loadData(supabaseApi, 'SUPABASE (post-seed)');
       setInitialLoading(false);
     } catch (err) {
       console.error('Seed failed:', err);
@@ -103,7 +114,7 @@ export default function App() {
 
   // Background refresh — reloads all data from the current API
   const handleDataChange = async () => {
-    await loadData(activeApi);
+    await loadData(activeApi, mode === 'demo' ? 'DEMO (refresh)' : 'SUPABASE (refresh)');
   };
 
   // Initial loading spinner — only before first data load
@@ -252,6 +263,9 @@ CREATE POLICY "public_access" ON roles FOR ALL USING (true) WITH CHECK (true);`}
     );
   }
 
+  // Compute data fingerprint for debug
+  const totalSpend = allRoles.reduce((s, r) => s + r.estimated_spend, 0);
+
   // Main app — ApiProvider stays for mutation-only components (RoleTable, ManageUnits, BusinessUnitView)
   return (
     <ApiProvider api={activeApi}>
@@ -272,6 +286,28 @@ CREATE POLICY "public_access" ON roles FOR ALL USING (true) WITH CHECK (true);`}
             onSliderChange={setCostRiskSlider}
             isDemo={isDemo}
           />
+
+          {/* Debug status bar — visible diagnostic */}
+          <div className={`px-4 py-1.5 text-xs font-mono flex items-center gap-4 border-b ${
+            mode === 'live' ? 'bg-gwoe-green/10 border-gwoe-green/30 text-gwoe-green' : 'bg-gwoe-amber/10 border-gwoe-amber/30 text-gwoe-amber'
+          }`}>
+            <span>Mode: <strong>{mode}</strong></span>
+            <span>Source: <strong>{dataSource || 'none'}</strong></span>
+            <span>Roles: <strong>{allRoles.length}</strong></span>
+            <span>BUs: <strong>{businessUnits.length}</strong></span>
+            <span>Spend: <strong>${totalSpend.toLocaleString()}</strong></span>
+            {error && <span className="text-gwoe-red">ERR: {error}</span>}
+            {allRoles.length === 42 && totalSpend === 16255000 && (
+              <span className="text-gwoe-amber">[matches demo seed fingerprint]</span>
+            )}
+          </div>
+
+          {error && (
+            <div className="mx-6 mt-4 bg-red-900/30 border border-red-700/50 rounded-md p-3">
+              <p className="text-xs text-red-400 font-mono break-all">{error}</p>
+            </div>
+          )}
+
           <main className="flex-1 overflow-y-auto p-6">
             {activeView === 'dashboard' && (
               <DashboardView allRoles={allRoles} onNavigate={handleNavigate} costRiskSlider={costRiskSlider} />
