@@ -208,49 +208,9 @@ export default function App() {
                 <li className="flex items-center gap-2"><span className="text-gwoe-green">&#10003;</span> Real workforce data</li>
               </ul>
               {hasSupabase ? (
-                <div className="space-y-2">
-                  <button onClick={enterLiveMode} className="w-full py-3 text-sm font-semibold bg-gwoe-green/20 text-gwoe-green border border-gwoe-green/30 rounded-md hover:bg-gwoe-green/30 transition-colors">
-                    Connect to Supabase
-                  </button>
-                  <details>
-                    <summary className="text-xs text-gwoe-accent cursor-pointer hover:underline">Setup: Create tables &amp; seed data</summary>
-                    <div className="mt-2 space-y-2">
-                      <details>
-                        <summary className="text-xs text-gwoe-muted cursor-pointer hover:underline">Show CREATE TABLE SQL</summary>
-                        <pre className="text-xs text-gwoe-accent font-mono mt-2 p-3 bg-gwoe-card rounded overflow-x-auto whitespace-pre-wrap">
-{`CREATE TABLE IF NOT EXISTS business_units (
-  id TEXT PRIMARY KEY, name TEXT NOT NULL, description TEXT
-);
-CREATE TABLE IF NOT EXISTS departments (
-  id SERIAL PRIMARY KEY,
-  business_unit_id TEXT NOT NULL REFERENCES business_units(id),
-  name TEXT NOT NULL
-);
-CREATE TABLE IF NOT EXISTS roles (
-  id SERIAL PRIMARY KEY,
-  department_id INTEGER NOT NULL REFERENCES departments(id) ON DELETE CASCADE,
-  role_name TEXT NOT NULL,
-  level TEXT NOT NULL CHECK(level IN ('L1','L2','L3','L4')),
-  candidate_for_offshore TEXT NOT NULL DEFAULT 'N',
-  recommendation TEXT NOT NULL DEFAULT 'N',
-  qualitative_why TEXT,
-  current_fte REAL NOT NULL DEFAULT 0,
-  estimated_spend REAL NOT NULL DEFAULT 0
-);
-ALTER TABLE business_units ENABLE ROW LEVEL SECURITY;
-ALTER TABLE departments ENABLE ROW LEVEL SECURITY;
-ALTER TABLE roles ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "public_access" ON business_units FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "public_access" ON departments FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "public_access" ON roles FOR ALL USING (true) WITH CHECK (true);`}
-                        </pre>
-                      </details>
-                      <button onClick={handleSeed} disabled={seeding} className="btn-secondary text-xs">
-                        {seeding ? 'Seeding...' : 'Seed Sample Data'}
-                      </button>
-                    </div>
-                  </details>
-                </div>
+                <button onClick={enterLiveMode} className="w-full py-3 text-sm font-semibold bg-gwoe-green/20 text-gwoe-green border border-gwoe-green/30 rounded-md hover:bg-gwoe-green/30 transition-colors">
+                  Connect to Supabase
+                </button>
               ) : (
                 <div className="text-center py-3 text-xs text-gwoe-muted border border-gwoe-border rounded-md bg-gwoe-bg">
                   Set env vars in Netlify to enable
