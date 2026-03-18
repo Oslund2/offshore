@@ -102,6 +102,25 @@ export default function Sidebar({ businessUnits, activeView, activeUnitId, onNav
           <span className="text-base">📋</span>
           C-Suite Summary
         </button>
+        {!isDemo && (
+          <>
+            <div className="pt-3 pb-1 px-3">
+              <p className="text-xs font-medium text-gwoe-muted uppercase tracking-wider">Admin</p>
+            </div>
+
+            <button
+              onClick={() => onNavigate('settings')}
+              className={`w-full text-left px-3 py-2.5 rounded-md text-sm transition-colors flex items-center gap-2.5 ${
+                activeView === 'settings'
+                  ? 'bg-gwoe-accent/10 text-gwoe-accent-glow border border-gwoe-accent/20'
+                  : 'text-gwoe-muted hover:text-gwoe-text hover:bg-gwoe-bg'
+              }`}
+            >
+              <span className="text-base">&#9881;</span>
+              Settings
+            </button>
+          </>
+        )}
       </nav>
 
       <div className="p-4 border-t border-gwoe-border">

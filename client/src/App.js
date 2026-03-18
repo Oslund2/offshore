@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { api as supabaseApi } from './utils/api';
 import { demoApi } from './utils/demoApi';
-import { seedSupabase } from './utils/seedSupabase';
 import { clearSupabase } from './utils/clearSupabase';
 import { ApiProvider } from './utils/ApiContext';
 import Sidebar from './components/Sidebar';
@@ -12,6 +11,7 @@ import ExecutiveSummary from './pages/ExecutiveSummary';
 import SavingsCalculator from './pages/SavingsCalculator';
 import ManageUnits from './pages/ManageUnits';
 import AICommandCenter from './pages/AICommandCenter';
+import Settings from './pages/Settings';
 
 export default function App() {
   // mode: null = not selected, 'demo' = in-memory, 'live' = supabase
@@ -23,14 +23,12 @@ export default function App() {
   const [rollup, setRollup] = useState(null);
   const [costRiskSlider, setCostRiskSlider] = useState(50);
   const [initialLoading, setInitialLoading] = useState(false);
-  const [seeding, setSeeding] = useState(false);
   const [error, setError] = useState(null);
 
   // Derive API from mode — deterministic, no ref/effect needed
   const activeApi = mode === 'demo' ? demoApi : supabaseApi;
   const isDemo = mode === 'demo';
 
-  const [clearing, setClearing] = useState(false);
 
   // Central data loader — fetches EVERYTHING, including per-role data.
   // This is the SINGLE source of truth. No child component fetches independently.
@@ -86,22 +84,6 @@ export default function App() {
     setInitialLoading(false);
   };
 
-  const handleSeed = async () => {
-    setSeeding(true);
-    try {
-      await seedSupabase();
-      setMode('live');
-      setInitialLoading(true);
-      await loadData(supabaseApi);
-      setInitialLoading(false);
-    } catch (err) {
-      console.error('Seed failed:', err);
-      setError(`Seed failed: ${err.message}`);
-    } finally {
-      setSeeding(false);
-    }
-  };
-
   const handleNavigate = (view, unitId = null) => {
     setActiveView(view);
     setActiveUnitId(unitId);
@@ -113,7 +95,6 @@ export default function App() {
   };
 
   const handleClearDatabase = async () => {
-    setClearing(true);
     try {
       await clearSupabase();
       setBusinessUnits([]);
@@ -122,8 +103,6 @@ export default function App() {
       setError('Database cleared. Use "Manage Units" to add your workforce data.');
     } catch (err) {
       setError(`Clear failed: ${err.message}`);
-    } finally {
-      setClearing(false);
     }
   };
 
@@ -233,10 +212,6 @@ export default function App() {
     );
   }
 
-  // Detect if Supabase contains the demo seed data
-  const totalSpend = allRoles.reduce((s, r) => s + r.estimated_spend, 0);
-  const hasSeedData = mode === 'live' && allRoles.length === 42 && totalSpend === 16255000;
-
   return (
     <ApiProvider api={activeApi}>
       <div className="flex h-screen bg-gwoe-bg overflow-hidden">
@@ -256,25 +231,6 @@ export default function App() {
             onSliderChange={setCostRiskSlider}
             isDemo={isDemo}
           />
-
-          {/* Seed data detected banner — only in Live Mode */}
-          {hasSeedData && (
-            <div className="mx-6 mt-4 bg-gwoe-amber/10 border border-gwoe-amber/30 rounded-md p-4 flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold text-gwoe-amber">Demo seed data detected in your database</p>
-                <p className="text-xs text-gwoe-muted mt-1">
-                  Your Supabase database contains the sample data (42 roles, 6 units). Clear it to start entering your own workforce data.
-                </p>
-              </div>
-              <button
-                onClick={handleClearDatabase}
-                disabled={clearing}
-                className="ml-4 px-4 py-2 text-xs font-semibold bg-gwoe-amber/20 text-gwoe-amber border border-gwoe-amber/30 rounded-md hover:bg-gwoe-amber/30 transition-colors whitespace-nowrap"
-              >
-                {clearing ? 'Clearing...' : 'Clear Seed Data'}
-              </button>
-            </div>
-          )}
 
           {error && (
             <div className="mx-6 mt-4 bg-red-900/30 border border-red-700/50 rounded-md p-3">
@@ -304,6 +260,9 @@ export default function App() {
             )}
             {activeView === 'command' && (
               <AICommandCenter allRoles={allRoles} />
+            )}
+            {activeView === 'settings' && (
+              <Settings onClearDatabase={handleClearDatabase} isDemo={isDemo} />
             )}
           </main>
         </div>
