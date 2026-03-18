@@ -31,6 +31,7 @@ export default function App() {
 
   // Debug: track which source loaded the data
   const [dataSource, setDataSource] = useState(null);
+  const [debugInfo, setDebugInfo] = useState(null);
 
   // Central data loader — fetches EVERYTHING, including per-role data.
   // This is the SINGLE source of truth. No child component fetches independently.
@@ -84,9 +85,29 @@ export default function App() {
     setMode('live');
     setInitialLoading(true);
     setError(null);
+
+    const sbUrl = process.env.REACT_APP_SUPABASE_URL || '(empty)';
+    const sbKey = process.env.REACT_APP_SUPABASE_KEY || '(empty)';
+    const info = { url: sbUrl.substring(0, 40), keyLen: sbKey.length };
+
+    // Direct fetch test — bypasses supabase-js to confirm connectivity
+    try {
+      const testUrl = `${sbUrl}/rest/v1/business_units?select=id&limit=1`;
+      const resp = await fetch(testUrl, {
+        headers: { apikey: sbKey, Authorization: `Bearer ${sbKey}` },
+      });
+      info.directTest = `${resp.status} ${resp.statusText}`;
+      const body = await resp.text();
+      info.directBody = body.substring(0, 100);
+    } catch (fetchErr) {
+      info.directTest = `FETCH_FAILED: ${fetchErr.message}`;
+    }
+
+    setDebugInfo(info);
+
     const units = await loadData(supabaseApi, 'SUPABASE (live)');
     if (units && units.length === 0) {
-      setError('Connected but no data found. Seed the database first.');
+      setError('Connected but no data found. Add your workforce data to get started.');
     }
     setInitialLoading(false);
   };
@@ -248,7 +269,7 @@ export default function App() {
           />
 
           {/* Debug status bar — visible diagnostic */}
-          <div className={`px-4 py-1.5 text-xs font-mono flex items-center gap-4 border-b ${
+          <div className={`px-4 py-1.5 text-xs font-mono flex flex-wrap items-center gap-x-4 gap-y-1 border-b ${
             mode === 'live' ? 'bg-gwoe-green/10 border-gwoe-green/30 text-gwoe-green' : 'bg-gwoe-amber/10 border-gwoe-amber/30 text-gwoe-amber'
           }`}>
             <span>Mode: <strong>{mode}</strong></span>
@@ -258,7 +279,16 @@ export default function App() {
             <span>Spend: <strong>${totalSpend.toLocaleString()}</strong></span>
             {error && <span className="text-gwoe-red">ERR: {error}</span>}
             {allRoles.length === 42 && totalSpend === 16255000 && (
-              <span className="text-gwoe-amber">[matches demo seed fingerprint]</span>
+              <span className="text-gwoe-amber font-bold">[!! MATCHES DEMO SEED FINGERPRINT !!]</span>
+            )}
+            {debugInfo && (
+              <>
+                <span className="basis-full"></span>
+                <span>SB_URL: <strong>{debugInfo.url}</strong></span>
+                <span>KEY_LEN: <strong>{debugInfo.keyLen}</strong></span>
+                <span>DirectTest: <strong>{debugInfo.directTest}</strong></span>
+                {debugInfo.directBody && <span>Body: <strong>{debugInfo.directBody}</strong></span>}
+              </>
             )}
           </div>
 
