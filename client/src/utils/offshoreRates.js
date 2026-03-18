@@ -16,6 +16,7 @@ export const OFFSHORE_COUNTRIES = [
     flag: '🇮🇳',
     region: 'South Asia',
     timezone: 'UTC+5:30',
+    ianaZone: 'Asia/Kolkata',
     rates: { L1: 18000, L2: 28000, L3: 48000, L4: 75000 },
     riskProfile: {
       talentPool: 95,
@@ -36,6 +37,7 @@ export const OFFSHORE_COUNTRIES = [
     flag: '🇵🇭',
     region: 'Southeast Asia',
     timezone: 'UTC+8',
+    ianaZone: 'Asia/Manila',
     rates: { L1: 15000, L2: 24000, L3: 42000, L4: 68000 },
     riskProfile: {
       talentPool: 75,
@@ -56,6 +58,7 @@ export const OFFSHORE_COUNTRIES = [
     flag: '🇵🇱',
     region: 'Eastern Europe',
     timezone: 'UTC+1',
+    ianaZone: 'Europe/Warsaw',
     rates: { L1: 32000, L2: 48000, L3: 72000, L4: 105000 },
     riskProfile: {
       talentPool: 70,
@@ -76,6 +79,7 @@ export const OFFSHORE_COUNTRIES = [
     flag: '🇲🇽',
     region: 'Latin America',
     timezone: 'UTC-6',
+    ianaZone: 'America/Mexico_City',
     rates: { L1: 28000, L2: 42000, L3: 65000, L4: 95000 },
     riskProfile: {
       talentPool: 65,
@@ -96,6 +100,7 @@ export const OFFSHORE_COUNTRIES = [
     flag: '🇧🇷',
     region: 'Latin America',
     timezone: 'UTC-3',
+    ianaZone: 'America/Sao_Paulo',
     rates: { L1: 25000, L2: 38000, L3: 60000, L4: 90000 },
     riskProfile: {
       talentPool: 72,
@@ -116,6 +121,7 @@ export const OFFSHORE_COUNTRIES = [
     flag: '🇻🇳',
     region: 'Southeast Asia',
     timezone: 'UTC+7',
+    ianaZone: 'Asia/Ho_Chi_Minh',
     rates: { L1: 14000, L2: 22000, L3: 38000, L4: 60000 },
     riskProfile: {
       talentPool: 68,
@@ -136,6 +142,7 @@ export const OFFSHORE_COUNTRIES = [
     flag: '🇷🇴',
     region: 'Eastern Europe',
     timezone: 'UTC+2',
+    ianaZone: 'Europe/Bucharest',
     rates: { L1: 28000, L2: 42000, L3: 65000, L4: 95000 },
     riskProfile: {
       talentPool: 60,
@@ -156,6 +163,7 @@ export const OFFSHORE_COUNTRIES = [
     flag: '🇨🇴',
     region: 'Latin America',
     timezone: 'UTC-5',
+    ianaZone: 'America/Bogota',
     rates: { L1: 22000, L2: 35000, L3: 55000, L4: 82000 },
     riskProfile: {
       talentPool: 58,

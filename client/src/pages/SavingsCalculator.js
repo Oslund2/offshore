@@ -1,10 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { formatCurrency } from '../utils/format';
 import { US_RATES, OFFSHORE_COUNTRIES, calculateRoleSavings } from '../utils/offshoreRates';
+
+function useCurrentTime() {
+  const [now, setNow] = useState(new Date());
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 60_000);
+    return () => clearInterval(id);
+  }, []);
+  return now;
+}
+
+function formatLocalTime(ianaZone, now) {
+  return now.toLocaleTimeString('en-US', {
+    timeZone: ianaZone,
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  });
+}
 
 // Pure display component — receives allRoles from App.js, no independent data fetching
 export default function SavingsCalculator({ allRoles }) {
   const roles = allRoles || [];
+  const now = useCurrentTime();
   const [selectedCountries, setSelectedCountries] = useState(['india', 'philippines', 'poland']);
 
   const toggleCountry = (id) => {
@@ -60,7 +79,7 @@ export default function SavingsCalculator({ allRoles }) {
             >
               <span>{c.flag}</span>
               <span>{c.name}</span>
-              <span className="text-xs opacity-60">{c.timezone}</span>
+              <span className="text-xs opacity-60">{c.timezone} · {formatLocalTime(c.ianaZone, now)}</span>
             </button>
           ))}
         </div>
@@ -74,7 +93,7 @@ export default function SavingsCalculator({ allRoles }) {
               <span className="text-2xl">{country.flag}</span>
               <div>
                 <h4 className="text-sm font-semibold text-white">{country.name}</h4>
-                <p className="text-xs text-gwoe-muted">{country.region} · {country.timezone}</p>
+                <p className="text-xs text-gwoe-muted">{country.region} · {country.timezone} · {formatLocalTime(country.ianaZone, now)}</p>
               </div>
             </div>
 
