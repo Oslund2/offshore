@@ -3,11 +3,11 @@ import { formatCurrency } from '../utils/format';
 import { getSliderAdjustedRecommendation } from '../utils/sliderLogic';
 
 // Pure display component — receives allRoles from App.js, no independent data fetching
-export default function DashboardView({ allRoles, onNavigate, costRiskSlider }) {
-  if (!allRoles || allRoles.length === 0) return <p className="text-gwoe-muted">Loading dashboard...</p>;
+export default function DashboardView({ allRoles, businessUnits, onNavigate, costRiskSlider }) {
+  if (!businessUnits || businessUnits.length === 0) return <p className="text-gwoe-muted">Loading dashboard...</p>;
 
   // Recompute everything with slider adjustments
-  const adjustedRoles = allRoles.map(r => ({
+  const adjustedRoles = (allRoles || []).map(r => ({
     ...r,
     adjustedRec: getSliderAdjustedRecommendation(r.recommendation, r.level, r.qualitative_why, costRiskSlider),
   }));
@@ -27,8 +27,11 @@ export default function DashboardView({ allRoles, onNavigate, costRiskSlider }) 
   const retainPercent = totalFTE > 0 ? Math.round((retainFTE / totalFTE) * 100) : 0;
   const qualityScore = totalFTE > 0 ? Math.round(100 - (retainFTE / totalFTE) * 40 - (partialFTE / totalFTE) * 20) : 0;
 
-  // Group by unit
+  // Group by unit — start from businessUnits so all units appear even with 0 roles
   const unitMap = {};
+  for (const bu of businessUnits) {
+    unitMap[bu.id] = { id: bu.id, name: bu.name, total_roles: 0, total_fte: 0, total_spend: 0, offshore_fte: 0, offshore_spend: 0 };
+  }
   for (const r of adjustedRoles) {
     if (!unitMap[r.unitId]) unitMap[r.unitId] = { id: r.unitId, name: r.unitName, total_roles: 0, total_fte: 0, total_spend: 0, offshore_fte: 0, offshore_spend: 0 };
     unitMap[r.unitId].total_roles++;

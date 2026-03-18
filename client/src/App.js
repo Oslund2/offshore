@@ -244,7 +244,7 @@ export default function App() {
 
           <main className="flex-1 overflow-y-auto p-6">
             {activeView === 'dashboard' && (
-              <DashboardView allRoles={allRoles} onNavigate={handleNavigate} costRiskSlider={costRiskSlider} />
+              <DashboardView allRoles={allRoles} businessUnits={businessUnits} onNavigate={handleNavigate} costRiskSlider={costRiskSlider} />
             )}
             {activeView === 'unit' && activeUnitId && (
               <BusinessUnitView
