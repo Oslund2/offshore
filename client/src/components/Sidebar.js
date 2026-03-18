@@ -68,6 +68,18 @@ export default function Sidebar({ businessUnits, activeView, activeUnitId, onNav
         </div>
 
         <button
+          onClick={() => onNavigate('command')}
+          className={`w-full text-left px-3 py-2.5 rounded-md text-sm transition-colors flex items-center gap-2.5 ${
+            activeView === 'command'
+              ? 'bg-gwoe-accent/10 text-gwoe-accent-glow border border-gwoe-accent/20'
+              : 'text-gwoe-muted hover:text-gwoe-text hover:bg-gwoe-bg'
+          }`}
+        >
+          <span className="text-base">&#9043;</span>
+          AI Command Center
+        </button>
+
+        <button
           onClick={() => onNavigate('calculator')}
           className={`w-full text-left px-3 py-2.5 rounded-md text-sm transition-colors flex items-center gap-2.5 ${
             activeView === 'calculator'

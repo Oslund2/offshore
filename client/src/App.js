@@ -10,6 +10,7 @@ import DashboardView from './pages/DashboardView';
 import ExecutiveSummary from './pages/ExecutiveSummary';
 import SavingsCalculator from './pages/SavingsCalculator';
 import ManageUnits from './pages/ManageUnits';
+import AICommandCenter from './pages/AICommandCenter';
 
 export default function App() {
   // mode: null = not selected, 'demo' = in-memory, 'live' = supabase
@@ -274,6 +275,9 @@ CREATE POLICY "public_access" ON roles FOR ALL USING (true) WITH CHECK (true);`}
             )}
             {activeView === 'calculator' && (
               <SavingsCalculator />
+            )}
+            {activeView === 'command' && (
+              <AICommandCenter />
             )}
           </main>
         </div>
