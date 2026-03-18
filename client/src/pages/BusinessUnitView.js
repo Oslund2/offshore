@@ -69,7 +69,7 @@ export default function BusinessUnitView({ unitId, costRiskSlider, onDataChange 
       <div className="grid grid-cols-5 gap-4">
         <div className="card p-4">
           <p className="text-xs text-gwoe-muted uppercase tracking-wider">Total Roles</p>
-          <p className="text-2xl font-semibold text-white mt-1">{allRoles.length}</p>
+          <p className="text-2xl font-semibold text-white mt-1">{allRoles.filter(r => r.current_fte > 0 || r.estimated_spend > 0).length}</p>
         </div>
         <div className="card p-4">
           <p className="text-xs text-gwoe-muted uppercase tracking-wider">Total FTE</p>

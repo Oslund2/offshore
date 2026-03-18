@@ -14,7 +14,8 @@ export default function DashboardView({ allRoles, businessUnits, onNavigate, cos
 
   const totalFTE = adjustedRoles.reduce((s, r) => s + r.current_fte, 0);
   const totalSpend = adjustedRoles.reduce((s, r) => s + r.estimated_spend, 0);
-  const totalRoles = adjustedRoles.length;
+  const activeRoles = adjustedRoles.filter(r => r.current_fte > 0 || r.estimated_spend > 0);
+  const totalRoles = activeRoles.length;
 
   const offshoreFTE = adjustedRoles.filter(r => r.adjustedRec === 'Y').reduce((s, r) => s + r.current_fte, 0);
   const offshoreSpend = adjustedRoles.filter(r => r.adjustedRec === 'Y').reduce((s, r) => s + r.estimated_spend, 0);
@@ -34,7 +35,7 @@ export default function DashboardView({ allRoles, businessUnits, onNavigate, cos
   }
   for (const r of adjustedRoles) {
     if (!unitMap[r.unitId]) unitMap[r.unitId] = { id: r.unitId, name: r.unitName, total_roles: 0, total_fte: 0, total_spend: 0, offshore_fte: 0, offshore_spend: 0 };
-    unitMap[r.unitId].total_roles++;
+    if (r.current_fte > 0 || r.estimated_spend > 0) unitMap[r.unitId].total_roles++;
     unitMap[r.unitId].total_fte += r.current_fte;
     unitMap[r.unitId].total_spend += r.estimated_spend;
     if (r.adjustedRec === 'Y') { unitMap[r.unitId].offshore_fte += r.current_fte; unitMap[r.unitId].offshore_spend += r.estimated_spend; }
