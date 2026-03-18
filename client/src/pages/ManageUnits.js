@@ -162,7 +162,7 @@ export default function ManageUnits({ onDataChange }) {
       {addingUnit && (
         <div className="card p-5">
           <h3 className="text-sm font-semibold text-white mb-3">New Business Unit</h3>
-          <div className="grid grid-cols-2 gap-4 mb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
             <div>
               <label className="text-xs text-gwoe-muted block mb-1">Name</label>
               <input
@@ -199,9 +199,9 @@ export default function ManageUnits({ onDataChange }) {
 
       {units.map(unit => (
         <div key={unit.id} className="card">
-          <div className="px-5 py-4 border-b border-gwoe-border flex items-center justify-between">
+          <div className="px-4 sm:px-5 py-4 border-b border-gwoe-border flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             {editingUnitId === unit.id ? (
-              <div className="flex-1 flex items-center gap-3">
+              <div className="flex-1 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
                 <input
                   className="input-field flex-1"
                   value={editUnit.name}
@@ -214,8 +214,10 @@ export default function ManageUnits({ onDataChange }) {
                   onChange={e => setEditUnit({ ...editUnit, description: e.target.value })}
                   placeholder="Description"
                 />
-                <button onClick={() => handleEditUnit(unit.id)} className="px-3 py-1.5 text-xs bg-gwoe-green/20 text-gwoe-green rounded hover:bg-gwoe-green/30">Save</button>
-                <button onClick={() => setEditingUnitId(null)} className="px-3 py-1.5 text-xs bg-gwoe-border text-gwoe-muted rounded hover:bg-slate-600">Cancel</button>
+                <div className="flex gap-2">
+                  <button onClick={() => handleEditUnit(unit.id)} className="px-3 py-1.5 text-xs bg-gwoe-green/20 text-gwoe-green rounded hover:bg-gwoe-green/30">Save</button>
+                  <button onClick={() => setEditingUnitId(null)} className="px-3 py-1.5 text-xs bg-gwoe-border text-gwoe-muted rounded hover:bg-slate-600">Cancel</button>
+                </div>
               </div>
             ) : (
               <>
@@ -251,9 +253,9 @@ export default function ManageUnits({ onDataChange }) {
           {expandedUnit === unit.id && unitDetail && (
             <div className="p-4 space-y-3">
               {unitDetail.departments.map(dept => (
-                <div key={dept.id} className="flex items-center justify-between bg-gwoe-bg rounded-md px-4 py-3">
+                <div key={dept.id} className="flex flex-col sm:flex-row sm:items-center justify-between bg-gwoe-bg rounded-md px-4 py-3 gap-2 sm:gap-0">
                   {editingDeptId === dept.id ? (
-                    <div className="flex-1 flex items-center gap-3">
+                    <div className="flex-1 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
                       <input
                         className="input-field flex-1"
                         value={editDeptName}

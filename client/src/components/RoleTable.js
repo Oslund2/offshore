@@ -81,7 +81,7 @@ export default function RoleTable({ roles, departmentId, onDataChange, costRiskS
   return (
     <div>
       <div className="overflow-x-auto">
-        <table className="w-full text-sm">
+        <table className="w-full text-sm min-w-[700px]">
           <thead>
             <tr className="border-b border-gwoe-border text-gwoe-muted text-xs uppercase tracking-wider">
               <th className="text-left py-3 px-3 font-medium">Role</th>

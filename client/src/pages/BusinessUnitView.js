@@ -66,7 +66,7 @@ export default function BusinessUnitView({ unitId, costRiskSlider, onDataChange 
       )}
 
       {/* Unit Summary Cards */}
-      <div className="grid grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
         <div className="card p-4">
           <p className="text-xs text-gwoe-muted uppercase tracking-wider">Total Roles</p>
           <p className="text-2xl font-semibold text-white mt-1">{allRoles.filter(r => r.current_fte > 0 || r.estimated_spend > 0).length}</p>
@@ -94,14 +94,14 @@ export default function BusinessUnitView({ unitId, costRiskSlider, onDataChange 
       {/* Department Tables */}
       {unit.departments.map((dept) => (
         <div key={dept.id} className="card">
-          <div className="px-5 py-4 border-b border-gwoe-border flex items-center justify-between">
+          <div className="px-4 sm:px-5 py-4 border-b border-gwoe-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <div>
               <h3 className="text-sm font-semibold text-white">{dept.name}</h3>
               <p className="text-xs text-gwoe-muted mt-0.5">
                 {dept.roles.length} roles — {dept.roles.reduce((s, r) => s + r.current_fte, 0)} FTE — {formatCurrency(dept.roles.reduce((s, r) => s + r.estimated_spend, 0))}
               </p>
             </div>
-            <div className="flex gap-2 text-xs">
+            <div className="flex gap-2 text-xs flex-wrap">
               <span className="badge-yes">{dept.roles.filter(r => r.recommendation === 'Y').length} offshore</span>
               <span className="badge-partial">{dept.roles.filter(r => r.recommendation === 'P').length} partial</span>
               <span className="badge-no">{dept.roles.filter(r => r.recommendation === 'N').length} retain</span>

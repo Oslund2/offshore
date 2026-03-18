@@ -9,15 +9,27 @@ const BU_ICONS = {
   business: '💼',
 };
 
-export default function Sidebar({ businessUnits, activeView, activeUnitId, onNavigate, isDemo }) {
+export default function Sidebar({ businessUnits, activeView, activeUnitId, onNavigate, isDemo, mobileOpen, onClose }) {
   return (
-    <aside className="w-64 bg-gwoe-card border-r border-gwoe-border flex flex-col">
-      <div className="p-5 border-b border-gwoe-border">
-        <div className="flex items-center gap-2">
-          <h1 className="text-lg font-semibold text-white tracking-tight">GWOE</h1>
-          {isDemo && <span className="text-xs bg-gwoe-amber/20 text-gwoe-amber border border-gwoe-amber/30 px-1.5 py-0.5 rounded">DEMO</span>}
+    <aside className={`
+      fixed inset-y-0 left-0 z-40 w-64 bg-gwoe-card border-r border-gwoe-border flex flex-col
+      transform transition-transform duration-200 ease-in-out
+      ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}
+      md:relative md:translate-x-0 md:z-auto
+    `}>
+      <div className="p-5 border-b border-gwoe-border flex items-center justify-between">
+        <div>
+          <div className="flex items-center gap-2">
+            <h1 className="text-lg font-semibold text-white tracking-tight">GWOE</h1>
+            {isDemo && <span className="text-xs bg-gwoe-amber/20 text-gwoe-amber border border-gwoe-amber/30 px-1.5 py-0.5 rounded">DEMO</span>}
+          </div>
+          <p className="text-xs text-gwoe-muted mt-0.5">Workforce Optimization Engine</p>
         </div>
-        <p className="text-xs text-gwoe-muted mt-0.5">Workforce Optimization Engine</p>
+        <button onClick={onClose} className="md:hidden p-1 text-gwoe-muted hover:text-white">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M6 6l8 8M14 6l-8 8" />
+          </svg>
+        </button>
       </div>
 
       <nav className="flex-1 p-3 space-y-1 overflow-y-auto">

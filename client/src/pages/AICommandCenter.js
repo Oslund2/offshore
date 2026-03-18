@@ -270,16 +270,14 @@ export default function AICommandCenter({ allRoles }) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-gwoe-accent/30 to-gwoe-green/30 flex items-center justify-center border border-gwoe-accent/30">
-              <span className="text-lg">&#9043;</span>
-            </div>
-            <div>
-              <h2 className="text-lg font-semibold text-white">AI Command Center</h2>
-              <p className="text-xs text-gwoe-muted">Proactive intelligence across {totalRoles} roles</p>
-            </div>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-gwoe-accent/30 to-gwoe-green/30 flex items-center justify-center border border-gwoe-accent/30 flex-shrink-0">
+            <span className="text-lg">&#9043;</span>
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold text-white">AI Command Center</h2>
+            <p className="text-xs text-gwoe-muted">Proactive intelligence across {totalRoles} roles</p>
           </div>
         </div>
         <div className="flex items-center gap-4">
@@ -312,7 +310,7 @@ export default function AICommandCenter({ allRoles }) {
       )}
 
       {/* KPI Strip */}
-      <div className="grid grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         <div className="card p-4">
           <p className="text-xs text-gwoe-muted uppercase tracking-wider">Contradictions</p>
           <p className="text-2xl font-bold text-gwoe-amber mt-1">{contradictions.length}</p>
@@ -341,7 +339,7 @@ export default function AICommandCenter({ allRoles }) {
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex gap-1 border-b border-gwoe-border pb-px">
+      <div className="flex gap-1 border-b border-gwoe-border pb-px overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
         {tabs.map(tab => (
           <button
             key={tab.id}
@@ -371,7 +369,7 @@ export default function AICommandCenter({ allRoles }) {
           {/* Confidence Distribution */}
           <div className="card p-5">
             <h3 className="text-sm font-semibold text-white mb-4">AI Confidence Distribution</h3>
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {[
                 { label: 'High (80-99%)', min: 80, max: 100, color: 'bg-gwoe-green', textColor: 'text-gwoe-green' },
                 { label: 'Good (60-79%)', min: 60, max: 80, color: 'bg-gwoe-accent', textColor: 'text-gwoe-accent' },
@@ -491,7 +489,7 @@ export default function AICommandCenter({ allRoles }) {
                 </div>
                 {expandedContradiction === i && (
                   <div className="px-5 py-4 bg-gwoe-bg/50 border-t border-gwoe-border">
-                    <div className="grid grid-cols-3 gap-4 text-xs">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
                       <div>
                         <p className="text-gwoe-muted mb-1">Current Recommendation</p>
                         <span className={c.role.recommendation === 'Y' ? 'badge-yes' : c.role.recommendation === 'P' ? 'badge-partial' : 'badge-no'}>
@@ -641,9 +639,9 @@ export default function AICommandCenter({ allRoles }) {
                 </h4>
                 <div className="grid gap-2">
                   {cb.instances.map((inst, j) => (
-                    <div key={j} className="flex items-center justify-between bg-gwoe-bg rounded-md px-4 py-2.5 border border-gwoe-border">
+                    <div key={j} className="flex flex-col sm:flex-row sm:items-center justify-between bg-gwoe-bg rounded-md px-4 py-2.5 border border-gwoe-border gap-1 sm:gap-0">
                       <div className="flex items-center gap-3">
-                        <span className="text-xs font-medium text-white w-28">{inst.unit}</span>
+                        <span className="text-xs font-medium text-white">{inst.unit}</span>
                         <span className="text-xs font-mono text-gwoe-accent">{inst.level}</span>
                       </div>
                       <div className="flex items-center gap-4">
@@ -675,7 +673,7 @@ export default function AICommandCenter({ allRoles }) {
               {/* Timeline line */}
               <div className="absolute top-6 left-0 right-0 h-0.5 bg-gwoe-border"></div>
 
-              <div className="grid grid-cols-4 gap-4 relative">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 relative">
                 {[
                   { label: 'Wave 1', sub: 'Months 1-3', roles: waves.wave1, fte: wave1FTE, savings: wave1Savings, color: 'gwoe-green', fit: waveFit.wave1 },
                   { label: 'Wave 2', sub: 'Months 4-6', roles: waves.wave2, fte: wave2FTE, savings: wave2Savings, color: 'gwoe-accent', fit: waveFit.wave2 },
@@ -723,8 +721,8 @@ export default function AICommandCenter({ allRoles }) {
                 <h4 className="text-sm font-semibold text-white">{wave.label}</h4>
                 <span className="text-xs text-gwoe-muted">({wave.roles.length} roles)</span>
               </div>
-              <div className="p-4">
-                <table className="w-full text-sm">
+              <div className="p-4 overflow-x-auto">
+                <table className="w-full text-sm min-w-[580px]">
                   <thead>
                     <tr className="border-b border-gwoe-border text-gwoe-muted text-xs uppercase tracking-wider">
                       <th className="text-left py-2 px-3 font-medium">Role</th>

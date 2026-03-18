@@ -24,6 +24,7 @@ export default function App() {
   const [costRiskSlider, setCostRiskSlider] = useState(50);
   const [initialLoading, setInitialLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Derive API from mode — deterministic, no ref/effect needed
   const activeApi = mode === 'demo' ? demoApi : supabaseApi;
@@ -93,6 +94,7 @@ export default function App() {
   const handleNavigate = (view, unitId = null) => {
     setActiveView(view);
     setActiveUnitId(unitId);
+    setSidebarOpen(false);
   };
 
   // Background refresh — reloads all data from the current API
@@ -126,8 +128,8 @@ export default function App() {
   if (!mode) {
     const hasSupabase = process.env.REACT_APP_SUPABASE_URL && process.env.REACT_APP_SUPABASE_KEY;
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gwoe-bg p-6">
-        <div className="card p-8 max-w-3xl w-full">
+      <div className="flex items-center justify-center min-h-screen bg-gwoe-bg p-4 sm:p-6">
+        <div className="card p-6 sm:p-8 max-w-3xl w-full">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-white mb-2">GWOE</h1>
             <p className="text-sm text-gwoe-muted">Global Workforce Optimization Engine</p>
@@ -140,9 +142,9 @@ export default function App() {
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
             {/* Demo Mode Card */}
-            <div className="bg-gwoe-accent/5 border-2 border-gwoe-accent/40 rounded-xl p-6 flex flex-col">
+            <div className="bg-gwoe-accent/5 border-2 border-gwoe-accent/40 rounded-xl p-5 sm:p-6 flex flex-col">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-12 h-12 rounded-xl bg-gwoe-accent/20 flex items-center justify-center flex-shrink-0">
                   <span className="text-2xl">▶</span>
@@ -168,7 +170,7 @@ export default function App() {
             </div>
 
             {/* Live Mode Card */}
-            <div className={`border-2 rounded-xl p-6 flex flex-col ${hasSupabase ? 'bg-gwoe-green/5 border-gwoe-green/40' : 'bg-gwoe-bg border-gwoe-border'}`}>
+            <div className={`border-2 rounded-xl p-5 sm:p-6 flex flex-col ${hasSupabase ? 'bg-gwoe-green/5 border-gwoe-green/40' : 'bg-gwoe-bg border-gwoe-border'}`}>
               <div className="flex items-center gap-3 mb-4">
                 <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${hasSupabase ? 'bg-gwoe-green/20' : 'bg-gwoe-border'}`}>
                   <span className="text-2xl">&#9879;</span>
@@ -218,15 +220,22 @@ export default function App() {
 
   return (
     <ApiProvider api={activeApi}>
-      <div className="flex h-screen bg-gwoe-bg overflow-hidden">
+      <div className="flex h-[100dvh] bg-gwoe-bg overflow-hidden">
+        {/* Mobile overlay */}
+        {sidebarOpen && (
+          <div className="fixed inset-0 bg-black/60 z-30 md:hidden" onClick={() => setSidebarOpen(false)} />
+        )}
+
         <Sidebar
           businessUnits={businessUnits}
           activeView={activeView}
           activeUnitId={activeUnitId}
           onNavigate={handleNavigate}
           isDemo={isDemo}
+          mobileOpen={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
         />
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 flex flex-col overflow-hidden min-w-0">
           <Header
             activeView={activeView}
             activeUnitId={activeUnitId}
@@ -234,15 +243,16 @@ export default function App() {
             costRiskSlider={costRiskSlider}
             onSliderChange={setCostRiskSlider}
             isDemo={isDemo}
+            onMenuToggle={() => setSidebarOpen(true)}
           />
 
           {error && (
-            <div className="mx-6 mt-4 bg-red-900/30 border border-red-700/50 rounded-md p-3">
+            <div className="mx-4 sm:mx-6 mt-4 bg-red-900/30 border border-red-700/50 rounded-md p-3">
               <p className="text-xs text-red-400 font-mono break-all">{error}</p>
             </div>
           )}
 
-          <main className="flex-1 overflow-y-auto p-6">
+          <main className="flex-1 overflow-y-auto p-4 sm:p-6">
             {activeView === 'dashboard' && (
               <DashboardView allRoles={allRoles} businessUnits={businessUnits} onNavigate={handleNavigate} costRiskSlider={costRiskSlider} />
             )}

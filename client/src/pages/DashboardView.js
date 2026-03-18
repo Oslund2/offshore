@@ -72,7 +72,7 @@ export default function DashboardView({ allRoles, businessUnits, onNavigate, cos
       )}
 
       {/* Top KPIs */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <div className="card p-5">
           <p className="text-xs text-gwoe-muted uppercase tracking-wider">Total Workforce</p>
           <p className="text-3xl font-bold text-white mt-2">{totalFTE}</p>
@@ -96,7 +96,7 @@ export default function DashboardView({ allRoles, businessUnits, onNavigate, cos
       </div>
 
       {/* AI Sentiment & Breakdown */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="card p-5">
           <p className="text-xs text-gwoe-muted uppercase tracking-wider mb-3">AI Sentiment Score</p>
           <div className="flex items-center gap-4">
@@ -187,8 +187,8 @@ export default function DashboardView({ allRoles, businessUnits, onNavigate, cos
         <div className="px-5 py-4 border-b border-gwoe-border">
           <h3 className="text-sm font-semibold text-white">Business Unit Breakdown</h3>
         </div>
-        <div className="p-4">
-          <table className="w-full text-sm">
+        <div className="p-4 overflow-x-auto">
+          <table className="w-full text-sm min-w-[640px]">
             <thead>
               <tr className="border-b border-gwoe-border text-gwoe-muted text-xs uppercase tracking-wider">
                 <th className="text-left py-3 px-3 font-medium">Unit</th>
