@@ -8,6 +8,7 @@ export default function Header({ activeView, activeUnitId, businessUnits, costRi
     if (activeView === 'calculator') return 'Savings Calculator';
     if (activeView === 'executive') return 'Executive Summary';
     if (activeView === 'manage') return 'Manage Business Units';
+    if (activeView === 'chatbot') return 'Offshore Strategy Advisor';
     if (activeUnit) return activeUnit.name;
     return 'GWOE';
   };

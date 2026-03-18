@@ -11,6 +11,7 @@ import ExecutiveSummary from './pages/ExecutiveSummary';
 import SavingsCalculator from './pages/SavingsCalculator';
 import ManageUnits from './pages/ManageUnits';
 import AICommandCenter from './pages/AICommandCenter';
+import Chatbot from './pages/Chatbot';
 import Settings from './pages/Settings';
 
 export default function App() {
@@ -274,6 +275,9 @@ export default function App() {
             )}
             {activeView === 'command' && (
               <AICommandCenter allRoles={allRoles} />
+            )}
+            {activeView === 'chatbot' && (
+              <Chatbot allRoles={allRoles} />
             )}
             {activeView === 'settings' && (
               <Settings onClearDatabase={handleClearDatabase} isDemo={isDemo} />

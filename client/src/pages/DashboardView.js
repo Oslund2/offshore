@@ -1,9 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { formatCurrency } from '../utils/format';
 import { getSliderAdjustedRecommendation } from '../utils/sliderLogic';
+import { fteToHours, fteToProductiveHours, hourlyRate, formatHourlyRate, formatHours } from '../utils/capacityUtils';
+import CapacityToggle from '../components/CapacityToggle';
 
 // Pure display component — receives allRoles from App.js, no independent data fetching
 export default function DashboardView({ allRoles, businessUnits, onNavigate, costRiskSlider }) {
+  const [showCapacity, setShowCapacity] = useState(false);
+
   if (!businessUnits || businessUnits.length === 0) return <p className="text-gwoe-muted">Loading dashboard...</p>;
 
   // Recompute everything with slider adjustments
@@ -28,6 +32,12 @@ export default function DashboardView({ allRoles, businessUnits, onNavigate, cos
   const retainPercent = totalFTE > 0 ? Math.round((retainFTE / totalFTE) * 100) : 0;
   const qualityScore = totalFTE > 0 ? Math.round(100 - (retainFTE / totalFTE) * 40 - (partialFTE / totalFTE) * 20) : 0;
 
+  // Capacity calculations
+  const totalHours = fteToHours(totalFTE);
+  const productiveHours = fteToProductiveHours(totalFTE);
+  const avgHourly = hourlyRate(totalSpend, totalFTE);
+  const offshoreHours = fteToHours(offshoreFTE);
+
   // Group by unit — start from businessUnits so all units appear even with 0 roles
   const unitMap = {};
   for (const bu of businessUnits) {
@@ -45,8 +55,9 @@ export default function DashboardView({ allRoles, businessUnits, onNavigate, cos
   // Group by level
   const levelMap = {};
   for (const r of adjustedRoles) {
-    if (!levelMap[r.level]) levelMap[r.level] = { level: r.level, total_fte: 0, offshore_count: 0, retain_count: 0 };
+    if (!levelMap[r.level]) levelMap[r.level] = { level: r.level, total_fte: 0, total_spend: 0, offshore_count: 0, retain_count: 0 };
     levelMap[r.level].total_fte += r.current_fte;
+    levelMap[r.level].total_spend += r.estimated_spend;
     if (r.adjustedRec === 'Y') levelMap[r.level].offshore_count++;
     if (r.adjustedRec === 'N') levelMap[r.level].retain_count++;
   }
@@ -71,28 +82,61 @@ export default function DashboardView({ allRoles, businessUnits, onNavigate, cos
         </div>
       )}
 
+      {/* Capacity Toggle */}
+      <div className="flex items-center justify-between">
+        <div />
+        <CapacityToggle showCapacity={showCapacity} onToggle={() => setShowCapacity(!showCapacity)} />
+      </div>
+
       {/* Top KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <div className="card p-5">
-          <p className="text-xs text-gwoe-muted uppercase tracking-wider">Total Workforce</p>
-          <p className="text-3xl font-bold text-white mt-2">{totalFTE}</p>
-          <p className="text-xs text-gwoe-muted mt-1">FTE across {byUnit.length} units</p>
-        </div>
-        <div className="card p-5">
-          <p className="text-xs text-gwoe-muted uppercase tracking-wider">Annual Spend</p>
-          <p className="text-3xl font-bold text-white mt-2">{formatCurrency(totalSpend)}</p>
-          <p className="text-xs text-gwoe-muted mt-1">{totalRoles} evaluated roles</p>
-        </div>
-        <div className="card p-5 glow-border">
-          <p className="text-xs text-gwoe-green uppercase tracking-wider">Potential FTE Savings</p>
-          <p className="text-3xl font-bold text-gwoe-green mt-2">{offshoreFTE}</p>
-          <p className="text-xs text-gwoe-muted mt-1">{offshorePercent}% of workforce</p>
-        </div>
-        <div className="card p-5 glow-border">
-          <p className="text-xs text-gwoe-green uppercase tracking-wider">Est. Cost Reduction</p>
-          <p className="text-3xl font-bold text-gwoe-green mt-2">{formatCurrency(savingsEstimate)}</p>
-          <p className="text-xs text-gwoe-muted mt-1">55% offshore savings model</p>
-        </div>
+        {showCapacity ? (
+          <>
+            <div className="card p-5">
+              <p className="text-xs text-gwoe-muted uppercase tracking-wider">Total Capacity (Gross)</p>
+              <p className="text-2xl sm:text-3xl font-bold text-white mt-2">{formatHours(totalHours)}</p>
+              <p className="text-xs text-gwoe-muted mt-1">{totalFTE} FTE x 2,080 hrs</p>
+            </div>
+            <div className="card p-5">
+              <p className="text-xs text-gwoe-muted uppercase tracking-wider">Productive Capacity</p>
+              <p className="text-2xl sm:text-3xl font-bold text-white mt-2">{formatHours(productiveHours)}</p>
+              <p className="text-xs text-gwoe-muted mt-1">80% utilization rate</p>
+            </div>
+            <div className="card p-5">
+              <p className="text-xs text-gwoe-accent uppercase tracking-wider">Avg All-In Hourly Rate</p>
+              <p className="text-2xl sm:text-3xl font-bold text-gwoe-accent mt-2">{formatHourlyRate(avgHourly)}</p>
+              <p className="text-xs text-gwoe-muted mt-1">{formatCurrency(totalSpend)} / {totalHours.toLocaleString()} hrs</p>
+            </div>
+            <div className="card p-5 glow-border">
+              <p className="text-xs text-gwoe-green uppercase tracking-wider">Offshore-Ready Hours</p>
+              <p className="text-2xl sm:text-3xl font-bold text-gwoe-green mt-2">{formatHours(offshoreHours)}</p>
+              <p className="text-xs text-gwoe-muted mt-1">{offshorePercent}% of total capacity</p>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="card p-5">
+              <p className="text-xs text-gwoe-muted uppercase tracking-wider">Total Workforce</p>
+              <p className="text-2xl sm:text-3xl font-bold text-white mt-2">{totalFTE}</p>
+              <p className="text-xs text-gwoe-muted mt-1">FTE across {byUnit.length} units</p>
+            </div>
+            <div className="card p-5">
+              <p className="text-xs text-gwoe-muted uppercase tracking-wider">Annual Spend</p>
+              <p className="text-2xl sm:text-3xl font-bold text-white mt-2">{formatCurrency(totalSpend)}</p>
+              <p className="text-xs text-gwoe-muted mt-1">{totalRoles} evaluated roles</p>
+            </div>
+            <div className="card p-5 glow-border">
+              <p className="text-xs text-gwoe-green uppercase tracking-wider">Potential FTE Savings</p>
+              <p className="text-2xl sm:text-3xl font-bold text-gwoe-green mt-2">{offshoreFTE}</p>
+              <p className="text-xs text-gwoe-muted mt-1">{offshorePercent}% of workforce</p>
+            </div>
+            <div className="card p-5 glow-border">
+              <p className="text-xs text-gwoe-green uppercase tracking-wider">Est. Cost Reduction</p>
+              <p className="text-2xl sm:text-3xl font-bold text-gwoe-green mt-2">{formatCurrency(savingsEstimate)}</p>
+              <p className="text-xs text-gwoe-muted mt-1">55% offshore savings model</p>
+            </div>
+          </>
+        )}
       </div>
 
       {/* AI Sentiment & Breakdown */}
@@ -139,7 +183,7 @@ export default function DashboardView({ allRoles, businessUnits, onNavigate, cos
           <div className="space-y-3">
             <div>
               <div className="flex justify-between text-xs mb-1">
-                <span className="text-gwoe-green">Offshore ({offshoreFTE} FTE)</span>
+                <span className="text-gwoe-green">Offshore ({showCapacity ? formatHours(fteToHours(offshoreFTE)) : `${offshoreFTE} FTE`})</span>
                 <span className="text-gwoe-muted">{offshorePercent}%</span>
               </div>
               <div className="h-2 bg-gwoe-bg rounded-full overflow-hidden">
@@ -148,7 +192,7 @@ export default function DashboardView({ allRoles, businessUnits, onNavigate, cos
             </div>
             <div>
               <div className="flex justify-between text-xs mb-1">
-                <span className="text-gwoe-amber">Partial ({partialFTE} FTE)</span>
+                <span className="text-gwoe-amber">Partial ({showCapacity ? formatHours(fteToHours(partialFTE)) : `${partialFTE} FTE`})</span>
                 <span className="text-gwoe-muted">{partialPercent}%</span>
               </div>
               <div className="h-2 bg-gwoe-bg rounded-full overflow-hidden">
@@ -157,7 +201,7 @@ export default function DashboardView({ allRoles, businessUnits, onNavigate, cos
             </div>
             <div>
               <div className="flex justify-between text-xs mb-1">
-                <span className="text-gwoe-red">Retain ({retainFTE} FTE)</span>
+                <span className="text-gwoe-red">Retain ({showCapacity ? formatHours(fteToHours(retainFTE)) : `${retainFTE} FTE`})</span>
                 <span className="text-gwoe-muted">{retainPercent}%</span>
               </div>
               <div className="h-2 bg-gwoe-bg rounded-full overflow-hidden">
@@ -173,9 +217,18 @@ export default function DashboardView({ allRoles, businessUnits, onNavigate, cos
             {byLevel.map(l => (
               <div key={l.level} className="flex items-center justify-between text-xs">
                 <span className="font-mono text-gwoe-accent">{l.level}</span>
-                <span className="text-gwoe-muted">{l.total_fte} FTE</span>
-                <span className="text-gwoe-green">{l.offshore_count} offshore</span>
-                <span className="text-gwoe-red">{l.retain_count} retain</span>
+                {showCapacity ? (
+                  <>
+                    <span className="text-gwoe-muted">{formatHours(fteToHours(l.total_fte))}</span>
+                    <span className="text-gwoe-accent">{formatHourlyRate(hourlyRate(l.total_spend, l.total_fte))}</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-gwoe-muted">{l.total_fte} FTE</span>
+                    <span className="text-gwoe-green">{l.offshore_count} offshore</span>
+                    <span className="text-gwoe-red">{l.retain_count} retain</span>
+                  </>
+                )}
               </div>
             ))}
           </div>
@@ -188,53 +241,103 @@ export default function DashboardView({ allRoles, businessUnits, onNavigate, cos
           <h3 className="text-sm font-semibold text-white">Business Unit Breakdown</h3>
         </div>
         <div className="p-4 overflow-x-auto">
-          <table className="w-full text-sm min-w-[640px]">
-            <thead>
-              <tr className="border-b border-gwoe-border text-gwoe-muted text-xs uppercase tracking-wider">
-                <th className="text-left py-3 px-3 font-medium">Unit</th>
-                <th className="text-right py-3 px-3 font-medium">Total Roles</th>
-                <th className="text-right py-3 px-3 font-medium">Total FTE</th>
-                <th className="text-right py-3 px-3 font-medium">Total Spend</th>
-                <th className="text-right py-3 px-3 font-medium">Offshore FTE</th>
-                <th className="text-right py-3 px-3 font-medium">Offshore Spend</th>
-                <th className="text-right py-3 px-3 font-medium">Est. Savings</th>
-                <th className="text-center py-3 px-3 font-medium">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {byUnit.map(u => (
-                <tr key={u.id} className="border-b border-gwoe-border/50 hover:bg-gwoe-bg/50">
-                  <td className="py-3 px-3 font-medium text-white">{u.name}</td>
-                  <td className="py-3 px-3 text-right font-mono">{u.total_roles}</td>
-                  <td className="py-3 px-3 text-right font-mono">{u.total_fte}</td>
-                  <td className="py-3 px-3 text-right font-mono">{formatCurrency(u.total_spend)}</td>
-                  <td className="py-3 px-3 text-right font-mono text-gwoe-green">{u.offshore_fte}</td>
-                  <td className="py-3 px-3 text-right font-mono text-gwoe-green">{formatCurrency(u.offshore_spend)}</td>
-                  <td className="py-3 px-3 text-right font-mono text-gwoe-green">{formatCurrency(Math.round(u.offshore_spend * 0.55))}</td>
-                  <td className="py-3 px-3 text-center">
-                    <button
-                      onClick={() => onNavigate('unit', u.id)}
-                      className="px-3 py-1 text-xs bg-gwoe-accent/20 text-gwoe-accent rounded hover:bg-gwoe-accent/30"
-                    >
-                      View Details
-                    </button>
-                  </td>
+          {showCapacity ? (
+            <table className="w-full text-sm min-w-[640px]">
+              <thead>
+                <tr className="border-b border-gwoe-border text-gwoe-muted text-xs uppercase tracking-wider">
+                  <th className="text-left py-3 px-3 font-medium">Unit</th>
+                  <th className="text-right py-3 px-3 font-medium">FTE</th>
+                  <th className="text-right py-3 px-3 font-medium">Gross Hours</th>
+                  <th className="text-right py-3 px-3 font-medium">Productive Hrs</th>
+                  <th className="text-right py-3 px-3 font-medium">All-In $/hr</th>
+                  <th className="text-right py-3 px-3 font-medium">Annual Spend</th>
+                  <th className="text-right py-3 px-3 font-medium">Offshore Hrs</th>
+                  <th className="text-center py-3 px-3 font-medium">Action</th>
                 </tr>
-              ))}
-            </tbody>
-            <tfoot>
-              <tr className="border-t-2 border-gwoe-accent/30 font-semibold">
-                <td className="py-3 px-3 text-white">TOTAL</td>
-                <td className="py-3 px-3 text-right font-mono text-white">{totalRoles}</td>
-                <td className="py-3 px-3 text-right font-mono text-white">{totalFTE}</td>
-                <td className="py-3 px-3 text-right font-mono text-white">{formatCurrency(totalSpend)}</td>
-                <td className="py-3 px-3 text-right font-mono text-gwoe-green">{offshoreFTE}</td>
-                <td className="py-3 px-3 text-right font-mono text-gwoe-green">{formatCurrency(offshoreSpend)}</td>
-                <td className="py-3 px-3 text-right font-mono text-gwoe-green">{formatCurrency(savingsEstimate)}</td>
-                <td></td>
-              </tr>
-            </tfoot>
-          </table>
+              </thead>
+              <tbody>
+                {byUnit.map(u => (
+                  <tr key={u.id} className="border-b border-gwoe-border/50 hover:bg-gwoe-bg/50">
+                    <td className="py-3 px-3 font-medium text-white">{u.name}</td>
+                    <td className="py-3 px-3 text-right font-mono">{u.total_fte}</td>
+                    <td className="py-3 px-3 text-right font-mono">{fteToHours(u.total_fte).toLocaleString()}</td>
+                    <td className="py-3 px-3 text-right font-mono">{fteToProductiveHours(u.total_fte).toLocaleString()}</td>
+                    <td className="py-3 px-3 text-right font-mono text-gwoe-accent">{formatHourlyRate(hourlyRate(u.total_spend, u.total_fte))}</td>
+                    <td className="py-3 px-3 text-right font-mono">{formatCurrency(u.total_spend)}</td>
+                    <td className="py-3 px-3 text-right font-mono text-gwoe-green">{fteToHours(u.offshore_fte).toLocaleString()}</td>
+                    <td className="py-3 px-3 text-center">
+                      <button
+                        onClick={() => onNavigate('unit', u.id)}
+                        className="px-3 py-1 text-xs bg-gwoe-accent/20 text-gwoe-accent rounded hover:bg-gwoe-accent/30"
+                      >
+                        View Details
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr className="border-t-2 border-gwoe-accent/30 font-semibold">
+                  <td className="py-3 px-3 text-white">TOTAL</td>
+                  <td className="py-3 px-3 text-right font-mono text-white">{totalFTE}</td>
+                  <td className="py-3 px-3 text-right font-mono text-white">{totalHours.toLocaleString()}</td>
+                  <td className="py-3 px-3 text-right font-mono text-white">{productiveHours.toLocaleString()}</td>
+                  <td className="py-3 px-3 text-right font-mono text-gwoe-accent">{formatHourlyRate(avgHourly)}</td>
+                  <td className="py-3 px-3 text-right font-mono text-white">{formatCurrency(totalSpend)}</td>
+                  <td className="py-3 px-3 text-right font-mono text-gwoe-green">{fteToHours(offshoreFTE).toLocaleString()}</td>
+                  <td></td>
+                </tr>
+              </tfoot>
+            </table>
+          ) : (
+            <table className="w-full text-sm min-w-[640px]">
+              <thead>
+                <tr className="border-b border-gwoe-border text-gwoe-muted text-xs uppercase tracking-wider">
+                  <th className="text-left py-3 px-3 font-medium">Unit</th>
+                  <th className="text-right py-3 px-3 font-medium">Total Roles</th>
+                  <th className="text-right py-3 px-3 font-medium">Total FTE</th>
+                  <th className="text-right py-3 px-3 font-medium">Total Spend</th>
+                  <th className="text-right py-3 px-3 font-medium">Offshore FTE</th>
+                  <th className="text-right py-3 px-3 font-medium">Offshore Spend</th>
+                  <th className="text-right py-3 px-3 font-medium">Est. Savings</th>
+                  <th className="text-center py-3 px-3 font-medium">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {byUnit.map(u => (
+                  <tr key={u.id} className="border-b border-gwoe-border/50 hover:bg-gwoe-bg/50">
+                    <td className="py-3 px-3 font-medium text-white">{u.name}</td>
+                    <td className="py-3 px-3 text-right font-mono">{u.total_roles}</td>
+                    <td className="py-3 px-3 text-right font-mono">{u.total_fte}</td>
+                    <td className="py-3 px-3 text-right font-mono">{formatCurrency(u.total_spend)}</td>
+                    <td className="py-3 px-3 text-right font-mono text-gwoe-green">{u.offshore_fte}</td>
+                    <td className="py-3 px-3 text-right font-mono text-gwoe-green">{formatCurrency(u.offshore_spend)}</td>
+                    <td className="py-3 px-3 text-right font-mono text-gwoe-green">{formatCurrency(Math.round(u.offshore_spend * 0.55))}</td>
+                    <td className="py-3 px-3 text-center">
+                      <button
+                        onClick={() => onNavigate('unit', u.id)}
+                        className="px-3 py-1 text-xs bg-gwoe-accent/20 text-gwoe-accent rounded hover:bg-gwoe-accent/30"
+                      >
+                        View Details
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr className="border-t-2 border-gwoe-accent/30 font-semibold">
+                  <td className="py-3 px-3 text-white">TOTAL</td>
+                  <td className="py-3 px-3 text-right font-mono text-white">{totalRoles}</td>
+                  <td className="py-3 px-3 text-right font-mono text-white">{totalFTE}</td>
+                  <td className="py-3 px-3 text-right font-mono text-white">{formatCurrency(totalSpend)}</td>
+                  <td className="py-3 px-3 text-right font-mono text-gwoe-green">{offshoreFTE}</td>
+                  <td className="py-3 px-3 text-right font-mono text-gwoe-green">{formatCurrency(offshoreSpend)}</td>
+                  <td className="py-3 px-3 text-right font-mono text-gwoe-green">{formatCurrency(savingsEstimate)}</td>
+                  <td></td>
+                </tr>
+              </tfoot>
+            </table>
+          )}
         </div>
       </div>
     </div>
